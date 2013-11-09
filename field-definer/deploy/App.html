@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Field Content Definer</title>
+    <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
+    <!--  Build Date: Sat Nov 09 2013 11:23:39 GMT-0800 (PST) -->
+    
+    <script type="text/javascript">
+        var APP_BUILD_DATE = "Sat Nov 09 2013 11:23:39 GMT-0800 (PST)";
+        var CHECKSUM = "5264af448bf374bc44135ece3fa54f8d";
+    </script>
+    
+    <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
+
+    <script type="text/javascript">
+        Rally.onReady(function() {
+             
+/**
+ * A link that pops up a version dialog box
+ */
+
+Ext.define('Rally.technicalservices.InfoLink',{
+    extend: 'Ext.Component',
+    alias: 'widget.tsinfolink',
+    
+    /**
+     * @cfg {String} informationHtml
+     * Additional text to be displayed on the popup dialog (for exmaple,
+     * to add a description of the app's use or functionality)
+     */
+    informationHtml: null,
+    
+    /**
+     * 
+     * cfg {String} title
+     * The title for the dialog box
+     */
+     text: "Information",
+    
+    renderTpl: "<div id='{id}-infolinkWrap' class='tsinfolink'>TS</div>",
+
+    initComponent: function() {
+        this.callParent(arguments);
+       
+    },
+    
+    onRender: function() {
+        this.callParent(arguments);
+        this.mon(this.el,'click',this.onClick,this);
+    },
+    
+    _determineSize: function(container) {
+        console.log(container.xtype,container,container.getEl());
+        if ( container.ownerCt ) {
+            this._determineSize(container.ownerCt);
+        } else if ( container.xtype === "viewport" ) {
+            console.log("--");
+            console.log(container.getEl().dom.outerHTML);
+        }
+        return null;
+    },
+    onClick: function(e) {
+        var me = this;
+        // var current_size = this._determineSize(this);
+        
+        var dialog_items = [];
+        
+        if ( this.informationHtml ) {
+            dialog_items.push({
+                xtype:'container',
+                html: this.informationHtml
+            });
+        }
+                
+        dialog_items.push({
+            xtype:'container',
+            html:"This app was created by the Rally Technical Services Team."
+        });
+        
+        if ( APP_BUILD_DATE ) {
+            dialog_items.push({
+                xtype:'container',
+                html:'Build date/time: ' + APP_BUILD_DATE
+            });
+        }
+        
+        if (this.dialog){this.dialog.destroy();}
+        this.dialog = Ext.create('Rally.ui.dialog.Dialog',{
+            defaults: { padding: 5, margin: 5 },
+            closable: true,
+            draggable: true,
+            title: me.title,
+            items: dialog_items
+        });
+        this.dialog.show();
+    }
+});
+
+/*
+ */
+Ext.define('Rally.technicalservices.logger',{
+    constructor: function(config){
+        Ext.apply(this,config);
+    },
+    log: function(args){
+        var timestamp = "[ " + Ext.util.Format.date(new Date(), "Y-m-d H:i:s.u") + " ]";
+        //var output_args = arguments;
+        //output_args.unshift( [ "[ " + timestamp + " ]" ] );
+        //output_args = Ext.Array.push(output_args,arguments);
+        
+        var output_args = [];
+        output_args = Ext.Array.push(output_args,[timestamp]);
+        output_args = Ext.Array.push(output_args, Ext.Array.slice(arguments,0));
+
+        window.console && console.log.apply(console,output_args);
+    }
+
+});
+Ext.define('CustomApp', {
+    extend: 'Rally.app.App',
+    componentCls: 'app',
+
+    logger: new Rally.technicalservices.logger(),
+    items: [
+        {xtype:'container',itemId:'message_box'},
+        {xtype:'container',itemId:'selector_box', padding: 5, margin: 5, items: [
+            {
+                fieldLabel: 'MulitiSelect Field', 
+                xtype:'rallyfieldcombobox', 
+                model: 'UserStory', 
+                itemId: 'field_selector'
+            },
+            {
+                xtype:'textareafield',
+                fieldLabel: 'Valid Values',
+                itemId:'field_values'
+            }
+        ]},
+        {xtype:'container',itemId:'button_box',padding: 5, margin: 5, items: [
+            {xtype:'rallybutton',text:'Save',margin:5,itemId:'save_button'},
+            {xtype:'rallybutton',text:'Reset',margin:5,itemId:'reset_button'}
+        ]},
+        {xtype:'tsinfolink'}
+    ],
+    launch: function() {
+        var me = this;
+        var field_store = this.down('#field_selector').getStore();
+        field_store.on('load',this._filterOutExceptText,this);
+        this.down('#field_selector').on('change',this._getExistingChoices,this);
+        this.down('#save_button').on('click',me._validateAndSave,me);
+    },
+    _filterOutExceptText: function(store,records) {
+        store.filter([{
+            filterFn:function(field){ 
+                return field.get('fieldDefinition').attributeDefinition.AttributeType == "TEXT";
+            } 
+        }]);
+        this.down('#field_selector').setValue(store.getAt(1));
+    },
+    _getExistingChoices: function(){
+        var me = this;
+        this.logger.log('_getExistingChoices');
+        this.down('#field_values').setValue('');
+        
+        var field_name = this.down('#field_selector').getValue();
+        var key = 'rally.techservices.fieldvalues.' + field_name;
+        
+        Rally.data.PreferenceManager.load({
+            workspace: this.getContext().getWorkspace(),
+            filterByName: key,
+            success: function(prefs) {
+                me.logger.log("prefs",prefs);
+                if ( prefs && prefs[key] ) {
+                    var values = Ext.JSON.decode(prefs[key]);
+                    me.logger.log(values);
+                    me.down('#field_values').setValue(values.join('\r\n'));
+                }
+            }
+        });
+    },
+    _validateAndSave: function() {
+        var value_field = this.down('#field_values');
+        var raw_value = value_field.getValue();
+        
+        var values = Ext.util.Format.trim(raw_value).split(/\n/);
+        var unique_array = Ext.Array.unique(values);
+        
+        var field_name = this.down('#field_selector').getValue();
+        
+        this.logger.log("_validateAndSave",field_name,unique_array);
+        
+        var key = 'rally.techservices.fieldvalues.' + field_name;
+        var settings = {};
+        settings[key] = Ext.JSON.encode(unique_array);
+        
+        Rally.data.PreferenceManager.update({
+            workspace: this.getContext().getWorkspace(),
+            settings: settings
+        });
+    }
+});
+            
+               Rally.launchApp('CustomApp', {
+                   name: 'Field Content Definer'
+               });
+        });
+    </script>
+    
+    <style type="text/css">
+
+.app {
+}
+.tsinfolink {
+    position:absolute;
+    right:0px;
+    width:5%;
+}
+    </style>
+
+</head>
+<body></body>
+</html>

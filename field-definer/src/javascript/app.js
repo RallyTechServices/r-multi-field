@@ -28,6 +28,7 @@ Ext.define('CustomApp', {
         var me = this;
         var field_store = this.down('#field_selector').getStore();
         field_store.on('load',this._filterOutExceptText,this);
+        this.down('#field_selector').on('change',this._getExistingChoices,this);
         this.down('#save_button').on('click',me._validateAndSave,me);
     },
     _filterOutExceptText: function(store,records) {
@@ -37,7 +38,27 @@ Ext.define('CustomApp', {
             } 
         }]);
         this.down('#field_selector').setValue(store.getAt(1));
-
+    },
+    _getExistingChoices: function(){
+        var me = this;
+        this.logger.log('_getExistingChoices');
+        this.down('#field_values').setValue('');
+        
+        var field_name = this.down('#field_selector').getValue();
+        var key = 'rally.techservices.fieldvalues.' + field_name;
+        
+        Rally.data.PreferenceManager.load({
+            workspace: this.getContext().getWorkspace(),
+            filterByName: key,
+            success: function(prefs) {
+                me.logger.log("prefs",prefs);
+                if ( prefs && prefs[key] ) {
+                    var values = Ext.JSON.decode(prefs[key]);
+                    me.logger.log(values);
+                    me.down('#field_values').setValue(values.join('\r\n'));
+                }
+            }
+        });
     },
     _validateAndSave: function() {
         var value_field = this.down('#field_values');
