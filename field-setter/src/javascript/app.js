@@ -13,6 +13,7 @@ Ext.define('CustomApp', {
     _makeGrid: function() {
         var store = Ext.create('Rally.data.WsapiDataStore',{
             model:'UserStory',
+            pageSize: 25,
             autoLoad: true
         });
         
@@ -21,8 +22,11 @@ Ext.define('CustomApp', {
             height: 500,
             columnCfgs: [
                 {text:'id',dataIndex:'FormattedID'},
-                {text:'Name',dataIndex:'Name'},
-                {text:'Notes',dataIndex:'Notes'}
+                {text:'Name',dataIndex:'Name',flex:1},
+                {text:'Notes',dataIndex:'Notes',editor:{
+                    xtype:'tsmultipicker'
+                }},
+                {text:'Tags',dataIndex:'Tags',editor:{xtype:'rallytagpicker'}}
             ]
         });
         
