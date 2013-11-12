@@ -23,10 +23,10 @@ Ext.define('CustomApp', {
             columnCfgs: [
                 {text:'id',dataIndex:'FormattedID'},
                 {text:'Name',dataIndex:'Name',flex:1},
-                {text:'Notes',dataIndex:'Notes',editor:{
-                    xtype:'tsmultipicker'
-                }},
-                {text:'Tags',dataIndex:'Tags',editor:{xtype:'rallytagpicker'}}
+                {text:'Notes',dataIndex:'Mine',editor:{
+                    xtype:'tsmultipicker',
+                    field_name:'Mine'
+                }}
             ]
         });
         

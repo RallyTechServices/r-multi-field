@@ -165,7 +165,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
 
     _createStoreAndExpand: function() {
         console.log('_createStoreAndExpand');
-        
+        var me = this;
         Ext.define('Choice',{
             extend:'Ext.data.Model',
             fields:[
@@ -174,11 +174,28 @@ Ext.define('Rally.techservices.TSMultiPicker', {
                 {name:this.groupName,type:'string'}
             ]
         });
+        
         var store = Ext.create('Ext.data.Store',{
             model:'Choice'
         });
-        console.log(store);
 
+        var key = 'rally.techservices.fieldvalues.' + this.field_name;
+        Rally.data.PreferenceManager.load({
+            filterByName: key,
+            success: function(prefs) {
+                console.log('success');
+                var values = [];
+                if ( prefs && prefs[key] ) {
+                    Ext.Array.each(Ext.JSON.decode(prefs[key]),function(value){
+                        values.push({Name:value,Value:value});
+                    });
+                    store.loadData(values);
+                }
+                me.store = store;
+                me.expand;
+            }
+        });
+        
 //        this.mon(store, 'load', function(store) {
 //            console.log('---',Ext.clone(store));
 //            this.store = store;
@@ -187,13 +204,13 @@ Ext.define('Rally.techservices.TSMultiPicker', {
         
 //        var datum = Ext.create('Choice',{Name:'A',Value:'A'});
 //        console.log(datum);
-        store.loadData([{Name:'A',Value:'A'},{Name:'B',Value:'B'}]);
-        this.store = store;
-        this.expand();
+//        store.loadData([{Name:'A',Value:'A'},{Name:'B',Value:'B'}]);
+//        this.store = store;
+//        this.expand();
         
         
     },
-
+    
     /**
      * Retrieve the selected items as an array of records
      */
