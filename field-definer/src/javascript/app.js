@@ -61,6 +61,7 @@ Ext.define('CustomApp', {
         });
     },
     _validateAndSave: function() {
+        var me = this;
         var value_field = this.down('#field_values');
         var raw_value = value_field.getValue();
         
@@ -77,7 +78,10 @@ Ext.define('CustomApp', {
         
         Rally.data.PreferenceManager.update({
             workspace: this.getContext().getWorkspace(),
-            settings: settings
+            settings: settings,
+            success: function(){
+                me.publish('choiceDefinerMessage', 'Choices saved');
+            }
         });
     }
 });

@@ -3,11 +3,11 @@
 <head>
     <title>Field Content Definer</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Sat Nov 09 2013 11:23:39 GMT-0800 (PST) -->
+    <!--  Build Date: Mon Nov 11 2013 16:39:17 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Sat Nov 09 2013 11:23:39 GMT-0800 (PST)";
-        var CHECKSUM = "5264af448bf374bc44135ece3fa54f8d";
+        var APP_BUILD_DATE = "Mon Nov 11 2013 16:39:17 GMT-0800 (PST)";
+        var CHECKSUM = "ab7f6a5799926cdd3c66e85e6572845f";
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -179,6 +179,7 @@ Ext.define('CustomApp', {
         });
     },
     _validateAndSave: function() {
+        var me = this;
         var value_field = this.down('#field_values');
         var raw_value = value_field.getValue();
         
@@ -195,7 +196,10 @@ Ext.define('CustomApp', {
         
         Rally.data.PreferenceManager.update({
             workspace: this.getContext().getWorkspace(),
-            settings: settings
+            settings: settings,
+            success: function(){
+                me.publish('choiceDefinerMessage', 'Choices saved');
+            }
         });
     }
 });

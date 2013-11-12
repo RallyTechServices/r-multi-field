@@ -9,8 +9,11 @@ Ext.define('CustomApp', {
     ],
     launch: function() {
         this._makeGrid();
+        this.subscribe(this, 'choiceDefinerMessage', this._makeGrid, this);
     },
     _makeGrid: function() {
+        this.down('#grid_box').removeAll();
+        
         var store = Ext.create('Rally.data.WsapiDataStore',{
             model:'UserStory',
             pageSize: 25,
@@ -23,13 +26,15 @@ Ext.define('CustomApp', {
             columnCfgs: [
                 {text:'id',dataIndex:'FormattedID'},
                 {text:'Name',dataIndex:'Name',flex:1},
-                {text:'Notes',dataIndex:'Mine',editor:{
+                {text:'Notes',dataIndex:'c_Mine',editor:{
                     xtype:'tsmultipicker',
-                    field_name:'Mine'
+                    field_name:'c_Mine'
                 }}
             ]
         });
         
         this.down('#grid_box').add(grid);
+        
+        
     }
 });

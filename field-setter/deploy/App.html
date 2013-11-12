@@ -3,11 +3,11 @@
 <head>
     <title>Field Setter</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Mon Nov 11 2013 16:16:49 GMT-0800 (PST) -->
+    <!--  Build Date: Mon Nov 11 2013 16:39:27 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Mon Nov 11 2013 16:16:49 GMT-0800 (PST)";
-        var CHECKSUM = 17849528231;
+        var APP_BUILD_DATE = "Mon Nov 11 2013 16:39:27 GMT-0800 (PST)";
+        var CHECKSUM = 17941310471;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -674,8 +674,11 @@ Ext.define('CustomApp', {
     ],
     launch: function() {
         this._makeGrid();
+        this.subscribe(this, 'choiceDefinerMessage', this._makeGrid, this);
     },
     _makeGrid: function() {
+        this.down('#grid_box').removeAll();
+        
         var store = Ext.create('Rally.data.WsapiDataStore',{
             model:'UserStory',
             pageSize: 25,
@@ -688,15 +691,16 @@ Ext.define('CustomApp', {
             columnCfgs: [
                 {text:'id',dataIndex:'FormattedID'},
                 {text:'Name',dataIndex:'Name',flex:1},
-                {text:'Notes',dataIndex:'Notes',editor:{
+                {text:'Notes',dataIndex:'c_Mine',editor:{
                     xtype:'tsmultipicker',
-                    field_name:'Notes'
-                }},
-                {text:'Tags',dataIndex:'Tags',editor:{xtype:'rallytagpicker'}}
+                    field_name:'c_Mine'
+                }}
             ]
         });
         
         this.down('#grid_box').add(grid);
+        
+        
     }
 });
 
