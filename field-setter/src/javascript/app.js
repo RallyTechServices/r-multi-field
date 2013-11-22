@@ -26,9 +26,9 @@ Ext.define('CustomApp', {
             columnCfgs: [
                 {text:'id',dataIndex:'FormattedID'},
                 {text:'Name',dataIndex:'Name',flex:1},
-                {text:'Notes',dataIndex:'c_Mine',editor:{
+                {text:'Notes',dataIndex:'Notes',editor:{
                     xtype:'tsmultipicker',
-                    field_name:'c_Mine'
+                    field_name:'Notes'
                 }}
             ]
         });
