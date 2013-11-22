@@ -25,7 +25,7 @@ Ext.define('CustomApp', {
             height: 500,
             columnCfgs: [
                 {text:'id',dataIndex:'FormattedID'},
-                {text:'Name',dataIndex:'Name',flex:1},
+                {text:'Name',dataIndex:'Name',flex:1,editor:'rallytextfield'},
                 {text:'Notes',dataIndex:'Notes',editor:{
                     xtype:'tsmultipicker',
                     field_name:'Notes'
