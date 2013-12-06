@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Big Grid</title>
+    <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
+    <!--  Build Date: Thu Dec 05 2013 18:30:19 GMT-0800 (PST) -->
+    
+    <script type="text/javascript">
+        var APP_BUILD_DATE = "Thu Dec 05 2013 18:30:19 GMT-0800 (PST)";
+        var CHECKSUM = 16809950996;
+    </script>
+    
+    <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
+
+    <script type="text/javascript">
+        Rally.onReady(function() {
+             
+Ext.override(Rally.ui.picker.FieldPicker,{
+
+    _buildStoreData: function(models) {
+        var me = this;
+        var data = {};
+        Ext.Object.each(models, function(modelName, model) {
+            var fields = _.filter(model.getFields(), this._shouldShowField, this);
+            var otherModels = _.difference(Ext.Object.getValues(models), [model]);
+
+            _.each(fields, function(field) {
+                console.log(field);
+                var continue_flag = true;
+                if (typeof(this.ts_field_filter) == "function" ) {
+                    continue_flag = this.ts_field_filter(field);
+                }
+                if ( continue_flag ) {
+                    var fieldNameWithoutPrefix = field.name.replace(/^c_/, '');
+                    if (!data[fieldNameWithoutPrefix]) {
+                        data[fieldNameWithoutPrefix] = {
+                            name: field.name,
+                            displayName: this._getFieldDisplayName(field)
+                        };
+    
+                        var otherModelsWithField = _.filter(otherModels, function(otherModel) {
+                            return otherModel.hasField(fieldNameWithoutPrefix) && this._shouldShowField(otherModel.getField(fieldNameWithoutPrefix));
+                        }, this);
+    
+                        if (otherModelsWithField.length !== otherModels.length) {
+                            var modelsWithField = [model.displayName].concat(_.pluck(otherModelsWithField, 'displayName'));
+                            data[fieldNameWithoutPrefix].displayName += ' (' + modelsWithField.join(', ') + ')';
+                        }
+                    }
+                }
+            }, this);
+        }, this);
+        return data;
+    }
+});
+/**
+ * A link that pops up a version dialog box
+ */
+
+Ext.define('Rally.technicalservices.InfoLink',{
+    extend: 'Ext.Component',
+    alias: 'widget.tsinfolink',
+    
+    /**
+     * @cfg {String} informationHtml
+     * Additional text to be displayed on the popup dialog (for exmaple,
+     * to add a description of the app's use or functionality)
+     */
+    informationHtml: null,
+    
+    /**
+     * 
+     * cfg {String} title
+     * The title for the dialog box
+     */
+     text: "Information",
+    
+    renderTpl: "<div id='{id}-infolinkWrap' class='tsinfolink'>TS</div>",
+
+    initComponent: function() {
+        this.callParent(arguments);
+       
+    },
+    
+    onRender: function() {
+        this.callParent(arguments);
+        this.mon(this.el,'click',this.onClick,this);
+    },
+    _generateChecksum: function(string){
+        var chk = 0x12345678,
+            i;
+        string = string.replace(/var CHECKSUM = .*;/,"");
+        
+        for (i = 0; i < string.length; i++) {
+            chk += (string.charCodeAt(i) * i);
+        }
+    
+        return chk;
+    },
+    _checkChecksum: function(container) {
+        var me = this;
+        Ext.Ajax.request({
+            url: document.URL,
+            params: {
+                id: 1
+            },
+            success: function (response) {
+                text = response.responseText;
+                if ( CHECKSUM ) {
+                    if ( CHECKSUM !== me._generateChecksum(text) ) {
+                        console.log("Checksums don't match!");
+                        if ( me.dialog ) {
+                            me.dialog.add({xtype:'container',html:'Checksums do not match'});
+                        }
+                    }
+                }
+            }
+        });
+    },
+    onClick: function(e) {
+        var me = this;
+        this._checkChecksum(this);
+        
+        var dialog_items = [];
+        
+        if ( this.informationHtml ) {
+            dialog_items.push({
+                xtype:'container',
+                html: this.informationHtml
+            });
+        }
+                
+        dialog_items.push({
+            xtype:'container',
+            html:"This app was created by the Rally Technical Services Team."
+        });
+        
+        if ( APP_BUILD_DATE ) {
+            dialog_items.push({
+                xtype:'container',
+                html:'Build date/time: ' + APP_BUILD_DATE
+            });
+        }
+        
+        if (this.dialog){this.dialog.destroy();}
+        this.dialog = Ext.create('Rally.ui.dialog.Dialog',{
+            defaults: { padding: 5, margin: 5 },
+            closable: true,
+            draggable: true,
+            title: me.title,
+            items: dialog_items
+        });
+        this.dialog.show();
+    }
+});
+/*
+ */
+Ext.define('Rally.technicalservices.Logger',{
+    constructor: function(config){
+        Ext.apply(this,config);
+    },
+    log: function(args){
+        var timestamp = "[ " + Ext.util.Format.date(new Date(), "Y-m-d H:i:s.u") + " ]";
+        //var output_args = arguments;
+        //output_args.unshift( [ "[ " + timestamp + " ]" ] );
+        //output_args = Ext.Array.push(output_args,arguments);
+        
+        var output_args = [];
+        output_args = Ext.Array.push(output_args,[timestamp]);
+        output_args = Ext.Array.push(output_args, Ext.Array.slice(arguments,0));
+
+        window.console && console.log.apply(console,output_args);
+    }
+
+});
+
+Ext.define('Rally.technicalservices.SettingsDialog',{
+    extend: 'Rally.ui.dialog.Dialog',
+    alias: 'widget.tssettingsdialog',
+    config: {
+        /* default settings. pass new ones in */
+        title: 'Settings',
+        type: 'HierarchicalRequirement',
+        /**
+         * artifact_types
+         * [ @type ] artifact_types This is the list of items allowed in the model chooser drop down
+         */
+        artifact_types: [
+            {Name:'UserStory',Value:'hierarchicalrequirement'},
+            {Name:'Defect',Value:'Defect'}
+        ],
+        /**
+         * A string to apply to choose records that are allowed in the calculations --
+         * this query is applied to items as they exist now, and then all the calculations are
+         * about only those records as they were during the time period.  
+         * 
+         * This can make everything slow, because it adds a WsapiCall on top of the LookBack calls
+         */
+         query_string: null
+    },
+    items: {
+        xtype: 'panel',
+        border: false,
+        defaults: {
+            padding: 5,
+            margin: 5
+        },
+        items: [
+            {
+                xtype: 'container',
+                itemId: 'model_selector_box',
+                height: 50
+            },
+            {
+                xtype:'container',
+                itemId: 'column_selector_box',
+                height: 100
+            },
+            {
+                xtype:'container',
+                itemId: 'multichoice_column_selector_box',
+                height: 100
+            },
+            {
+                xtype:'container',
+                itemId:'query_selector_box'
+            }
+        ]
+    },
+    constructor: function(config){
+        this.mergeConfig(config);
+        this.callParent([this.config]);
+        
+    },
+    initComponent: function() {
+        this.callParent(arguments);
+        this.addEvents(
+            /**
+             * @event settingsChosen
+             * Fires when user clicks done after making settings choices
+             * @param {Rally.technicalservices.SettingsDialog} this
+             * @param {hash} config settings
+             */
+            'settingsChosen',
+            /**
+             * @event cancelChosen
+             * Fires when user clicks the cancel button
+             */
+            'cancelChosen'
+        );
+        this._buildButtons();
+        this._addChoosers();
+    },
+    _buildButtons: function() {
+        this.down('panel').addDocked({
+            xtype: 'toolbar',
+            dock: 'bottom',
+            padding: '0 0 10 0',
+            layout: {
+                type: 'hbox',
+                pack: 'center'
+            },
+            ui: 'footer',
+            items: [
+                {
+                    xtype: 'rallybutton',
+                    text: 'Save',
+                    scope: this,
+                    userAction: 'clicked done in dialog',
+                    handler: function() {
+                        this.fireEvent('settingsChosen', this, this._getConfig());
+                        this.close();
+                    }
+                },
+                {
+                    xtype: 'rallybutton',
+                    text: 'Cancel',
+                    handler: function() {
+                        this.fireEvent('cancelChosen');
+                        this.close()
+                    },
+                    scope: this
+                }
+            ]
+        });
+    },
+    _getConfig: function() {
+        var config = {};
+        if ( this.down('#model_chooser') ) {
+            config.type = this.down('#model_chooser').getValue();
+        }
+        var columns = [];
+        var fetch = [];
+            
+        if ( this.down('#column_chooser') ) {
+            var fields = this.down('#column_chooser').getValue();
+            Ext.Array.each(fields,function(field){
+                columns.push({
+                    dataIndex:field.get('name'),
+                    text: field.get('displayName')
+                });
+                fetch.push(field.get('name'));
+            });
+        }
+        if ( this.down('#multichoice_column_chooser') ) {
+            var fields = this.down('#multichoice_column_chooser').getValue();
+            Ext.Array.each(fields,function(field){
+                columns.push({
+                    dataIndex:field.get('name'),
+                    text: field.get('displayName')
+                });
+                fetch.push(field.get('name'));
+            });
+        }
+
+        config.columns = columns;
+        config.fetch = fetch.join(',');
+            
+        if ( this.down('#query_chooser') ) {
+            config.query_string = this.down('#query_chooser').getValue();
+        }
+        return config;
+    },
+    _addChoosers: function() {
+        var me = this;
+        this._addModelChooser();
+        this._addColumnChooser();
+        this._addMultiChoiceColumnChooser();
+        this._addQueryChooser();
+        
+    },
+    _addModelChooser: function() {
+        var me = this;
+        console.log("types",me.artifact_types);
+        var type_store = Ext.create('Rally.data.custom.Store',{
+            data: me.artifact_types
+        });
+        this.down('#model_selector_box').add({
+            xtype:'rallycombobox',
+            itemId: 'model_chooser',
+            displayField: 'Name',
+            valueField: 'Value',
+            store: type_store,
+            fieldLabel: 'Artifact Type',
+            labelWidth: 75,
+            value: me.type,
+            listeners: {
+                scope: this,
+                change: function(cb,new_value){
+                    this.type = new_value;
+                    this._addColumnChooser();
+                    this._addMultiChoiceColumnChooser();
+                }
+            }
+        });
+    },
+    _addColumnChooser: function() {
+        var me = this;
+        
+        this.down('#column_selector_box').removeAll();
+        var cb = this.down('#column_selector_box').add({
+            xtype: 'rallyfieldpicker',
+            autoExpand: false,
+            height: 50,
+            modelTypes: [me.type],
+            itemId: 'column_chooser',
+            labelWidth: 75,
+            fieldLabel: 'Columns',
+            ts_field_filter: this._filterOutTextFields
+        });
+    },
+    _addMultiChoiceColumnChooser: function() {
+        var me = this;
+        
+        this.down('#multichoice_column_selector_box').removeAll();
+        var cb = this.down('#multichoice_column_selector_box').add({
+            xtype: 'rallyfieldpicker',
+            autoExpand: false,
+            height: 50,
+            modelTypes: [me.type],
+            itemId: 'multichoice_column_chooser',
+            labelWidth: 75,
+            fieldLabel: 'Multi-select Columns',
+            ts_field_filter: this._filterInPossibleMultiFields
+        });
+    },
+    _addQueryChooser: function() {
+        var me = this;
+        this.down('#query_selector_box').add({
+            xtype:'textareafield',
+            grow: true,
+            itemId:'query_chooser',
+            labelAlign: 'top',
+            fieldLabel:'Limit to items that currently meet this query filter',
+            value: me.query_string
+        });
+    },
+    _dateValidator: function(value) {
+        return true;
+    },
+    _filterOutTextFields: function(field){
+        var attribute_defn = field.attributeDefinition;
+        
+        if ( attribute_defn ) {
+            var attribute_type = attribute_defn.AttributeType;
+            if ( attribute_type == "TEXT" ) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+        return true;
+    },
+    _filterInPossibleMultiFields: function(field){
+        var attribute_defn = field.attributeDefinition;
+        if ( field.name == "Description" || field.name == "Notes" ) {
+            return false;
+        }
+        if ( attribute_defn ) {
+            var attribute_type = attribute_defn.AttributeType;
+            if ( attribute_type == "TEXT" ) {
+                return true;
+            }
+        } else {
+            return false;
+        }
+        return false;
+    },
+    _filterOutExceptChoices: function(store,records) {
+        store.filter([{
+            filterFn:function(field){ 
+                var attribute_type = field.get('fieldDefinition').attributeDefinition.AttributeType;
+                if (  attribute_type == "BOOLEAN" ) {
+                    return true;
+                }
+                if ( attribute_type == "STRING" || attribute_type == "STATE" ) {
+                    if ( field.get('fieldDefinition').attributeDefinition.Constrained ) {
+                        return true;
+                    }
+                }
+                if ( field.get('name') === 'State' ) { 
+                    return true;
+                }
+                //console.log(field.get('name'),field.get('fieldDefinition').attributeDefinition.AttributeType);
+                return false;
+            } 
+        }]);
+    },
+    _filterOutExceptNumbers: function(store,records) {
+        store.filter([{
+            filterFn:function(field){ 
+                var attribute_type = field.get('fieldDefinition').attributeDefinition.AttributeType;
+                if (  attribute_type == "QUANTITY" || attribute_type == "INTEGER" || attribute_type == "DECIMAL" ) {
+                    return true;
+                }
+                if ( field.get('name') == 'Count' ) { return true; }
+                return false;
+            } 
+        }]);
+    }
+    
+});
+Ext.define('TSStringFilter',{
+    extend: 'Rally.data.QueryFilter',
+    config: {
+        query_string: ''
+    },
+    constructor: function(config) {
+        this.mergeConfig(config);
+        this.callParent([this.config]);
+    },
+    _createQueryString: function(property, operator, value) {
+        return this.query_string;
+    }
+});
+(function() {
+    var Ext = window.Ext4 || window.Ext;
+    var appAutoScroll = Ext.isIE7 || Ext.isIE8;
+    var gridAutoScroll = !appAutoScroll;
+
+    Ext.define('CustomApp', {
+        extend: 'Rally.app.App',
+
+        requires: [
+            'Rally.data.util.Sorter',
+            'Rally.data.wsapi.Filter',
+            'Rally.ui.grid.Grid',
+            'Rally.data.ModelFactory',
+            'Rally.ui.grid.plugin.PercentDonePopoverPlugin'
+        ],
+
+        items: [
+            { xtype:'container',itemId:'settings_box',margin: 10 },
+            { xtype:'container', itemId:'grid_box',margin: 10 }
+        ],
+        config: {
+            defaultSettings: {
+                type: 'hierarchicalrequirement',
+                fetch: "FormattedID,Name"
+            }
+        },
+        logger: new Rally.technicalservices.Logger(),
+
+        autoScroll: appAutoScroll,
+
+        launch: function() {
+            var me = this;
+            
+            this.down('#settings_box').add({
+                xtype: 'rallybutton',
+                text: 'Settings',
+                handler: function() {
+                    me._showSettingsDialog();
+                },
+                scope: me
+            });
+            
+            this._makeAndDisplayGrid();
+            
+        },
+        
+        _makeAndDisplayGrid: function() {
+            this.logger.log("_makeAndDisplayGrid",this.config);
+            var context = this.getContext(),
+                pageSize = this.getSetting('pageSize'),
+                fetch = this.getSetting('fetch'),
+                columns = this._getColumns(fetch);
+
+            if ( this.down('rallygrid') ) {
+                this.down('rallygrid').destroy();
+            }
+            
+            this.down('#grid_box').add({
+                xtype: 'rallygrid',
+                columnCfgs: columns,
+                enableColumnHide: false,
+                enableRanking: false,
+                enableBulkEdit: true,
+                autoScroll: gridAutoScroll,
+                plugins: this._getPlugins(columns),
+                storeConfig: {
+                    fetch: fetch,
+                    models: this.getSetting('type'),
+                    filters: this._getFilters(),
+                    pageSize: pageSize,
+                    sorters: Rally.data.util.Sorter.sorters(this.getSetting('order')),
+                    listeners: {
+                        load: this._loaded,
+                        scope: this
+                    }
+                },
+                pagingToolbarCfg: {
+                    pageSizes: [pageSize]
+                }
+            });
+        },
+        
+        _loaded: function() { },
+
+        _getFilters: function() {
+            var filters = [],
+                query_string = this.getSetting('query_string');
+            filters = Ext.create('TSStringFilter',{query_string:query_string});
+            return filters;
+        },
+
+        _isSchedulableType: function(type) {
+            return _.contains(['hierarchicalrequirement', 'task', 'defect', 'defectsuite', 'testset'], type.toLowerCase());
+        },
+
+        _getFetchOnlyFields:function(){
+            return ['LatestDiscussionAgeInMinutes'];
+        },
+
+        _getColumns: function(fetch){
+            if (fetch) {
+                return Ext.Array.difference(fetch.split(','), this._getFetchOnlyFields());
+            }
+            return [];
+        },
+
+        _getPlugins: function(columns) {
+            var plugins = [];
+
+            if (Ext.Array.intersect(columns, ['PercentDoneByStoryPlanEstimate','PercentDoneByStoryCount']).length > 0) {
+                plugins.push('rallypercentdonepopoverplugin');
+            }
+
+            return plugins;
+        },
+        _showSettingsDialog: function() {
+            if ( this.dialog ) { this.dialog.destroy(); }
+            this.logger.log("old config",this.getSettings());
+            var config = this.config;
+            
+            //this.showSettings();
+            this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
+                type: this.getSetting('type'),
+                query_string: this.getSetting('query_string'),
+                listeners: {
+                    settingsChosen: function(dialog,returned_config) {
+                        this.config = Ext.Object.merge(config,returned_config);
+
+                        this.logger.log("new config",returned_config,this.config);
+                        this._makeAndDisplayGrid();
+                    },
+                    scope: this
+                }
+            });
+            this.dialog.show();
+        },
+        // override until we figure out problem with getSettingsFields
+        getSetting: function(field){
+            config = this.config;
+            if ( config[field] ) {
+                return config[field];
+            }
+            if ( config.defaultSettings[field] ) {
+                return config.defaultSettings[field];
+            }
+            return null;
+        }
+//        getSettingsFields: function() {
+//            var model_filters = [{property:'ElementName',value:'Defect'},
+//                {property:'ElementName',value:'HierarchicalRequirement'}];
+//            var store = Ext.create('Rally.data.wsapi.Store',{
+//                model:'TypeDefinition',
+//                filters: [Rally.data.wsapi.Filter.or(model_filters)],
+//                autoLoad: false
+//            });
+//            return [
+//                { 
+//                    name: 'type',
+//                    xtype: 'rallycombobox',
+//                    valueField: 'ElementName',
+//                    store: store,
+//                    /*storeConfig: {
+//                        model:'TypeDefinition',
+//                        filters: [Rally.data.wsapi.Filter.or(model_filters)],
+//                        autoLoad: false
+//                    },*/
+//                    readyEvent: 'ready' //event fired to signify readiness
+//                }
+//            ];
+//        }
+    });
+})();
+            
+               Rally.launchApp('CustomApp', {
+                   name: 'Big Grid'
+               });
+        });
+    </script>
+    
+    <style type="text/css">
+
+.app {
+}
+.tsinfolink {
+    position:absolute;
+    right:0px;
+    width:5%;
+}
+    </style>
+
+</head>
+<body></body>
+</html>
