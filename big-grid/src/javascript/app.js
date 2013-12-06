@@ -99,8 +99,9 @@
         },
 
         _getColumns: function(fetch){
-            if ( this.columns ) {
-                return this.columns;
+            if ( this.getSetting('columns') ) {
+                this.logger.log("Using column definitions",this.getSetting('columns'));
+                return this.getSetting('columns');
             }
             if (fetch) {
                 return Ext.Array.difference(fetch.split(','), this._getFetchOnlyFields());

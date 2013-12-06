@@ -8,7 +8,6 @@ Ext.override(Rally.ui.picker.FieldPicker,{
             var otherModels = _.difference(Ext.Object.getValues(models), [model]);
 
             _.each(fields, function(field) {
-                console.log(field);
                 var continue_flag = true;
                 if (typeof(this.ts_field_filter) == "function" ) {
                     continue_flag = this.ts_field_filter(field);

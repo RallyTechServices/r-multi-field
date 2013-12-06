@@ -159,7 +159,6 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     },
     _addModelChooser: function() {
         var me = this;
-        console.log("types",me.artifact_types);
         var type_store = Ext.create('Rally.data.custom.Store',{
             data: me.artifact_types
         });
