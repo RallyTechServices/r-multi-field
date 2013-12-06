@@ -20,7 +20,12 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
          * 
          * This can make everything slow, because it adds a WsapiCall on top of the LookBack calls
          */
-         query_string: null
+         query_string: null,
+         /**
+          * A string array of names of fields that are multiselect enabled
+          * [@String] fields 
+          */
+         multi_field_list: []
     },
     items: {
         xtype: 'panel',
@@ -40,11 +45,11 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                 itemId: 'column_selector_box',
                 height: 100
             },
-            {
+            /*{
                 xtype:'container',
                 itemId: 'multichoice_column_selector_box',
                 height: 100
-            },
+            },*/
             {
                 xtype:'container',
                 itemId:'query_selector_box'
@@ -54,7 +59,6 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     constructor: function(config){
         this.mergeConfig(config);
         this.callParent([this.config]);
-        
     },
     initComponent: function() {
         this.callParent(arguments);
@@ -109,6 +113,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         });
     },
     _getConfig: function() {
+        var me = this;
         var config = {};
         if ( this.down('#model_chooser') ) {
             config.type = this.down('#model_chooser').getValue();
@@ -119,10 +124,21 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         if ( this.down('#column_chooser') ) {
             var fields = this.down('#column_chooser').getValue();
             Ext.Array.each(fields,function(field){
-                columns.push({
-                    dataIndex:field.get('name'),
-                    text: field.get('displayName')
-                });
+                if ( Ext.Array.contains(me.multi_field_list,field.get('name') ) ) {
+                    columns.push({
+                        dataIndex:field.get('name'),
+                        text: field.get('displayName'),
+                        editor: {
+                            xtype:'tsmultipicker',
+                            field_name:field.get('name')
+                        }
+                    });
+                } else {
+                    columns.push({
+                        dataIndex:field.get('name'),
+                        text: field.get('displayName')
+                    }); 
+                }
                 fetch.push(field.get('name'));
             });
         }
@@ -153,7 +169,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         var me = this;
         this._addModelChooser();
         this._addColumnChooser();
-        this._addMultiChoiceColumnChooser();
+        //this._addMultiChoiceColumnChooser();
         this._addQueryChooser();
         
     },
@@ -176,7 +192,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                 change: function(cb,new_value){
                     this.type = new_value;
                     this._addColumnChooser();
-                    this._addMultiChoiceColumnChooser();
+                    //this._addMultiChoiceColumnChooser();
                 }
             }
         });
@@ -189,6 +205,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             xtype: 'rallyfieldpicker',
             autoExpand: false,
             height: 50,
+            multi_field_list: this.multi_field_list,
             modelTypes: [me.type],
             itemId: 'column_chooser',
             labelWidth: 75,
@@ -231,6 +248,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         if ( attribute_defn ) {
             var attribute_type = attribute_defn.AttributeType;
             if ( attribute_type == "TEXT" ) {
+                return Ext.Array.contains(this.multi_field_list,field.name);
                 return false;
             }
         } else {

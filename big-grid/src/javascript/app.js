@@ -32,6 +32,8 @@
         launch: function() {
             var me = this;
             
+            this._getMulitFieldList();
+            
             this.down('#settings_box').add({
                 xtype: 'rallybutton',
                 text: 'Settings',
@@ -44,7 +46,31 @@
             this._makeAndDisplayGrid();
             
         },
-        
+        _getMulitFieldList: function() {
+            var me = this;
+            //var key = 'rally.techservices.fieldvalues.' + field_name;
+            var key = 'rally.techservices.fieldvalues.';
+            this.multi_field_list = [];
+            
+            Rally.data.PreferenceManager.load({
+                workspace: this.getContext().getWorkspace(),
+                additionalFilters: [{
+                    property:'Name',
+                    operator:'contains',
+                    value:key
+                }],
+                success: function(prefs) {
+                    me.logger.log("prefs",prefs);
+                    if ( prefs ) {
+                        Ext.Object.each(prefs,function(name,value){
+                            var name_array = name.split('.');
+                            var field_name = name_array[name_array.length - 1];
+                            me.multi_field_list.push(field_name);
+                        });
+                    }
+                }
+            });
+        },
         _makeAndDisplayGrid: function() {
             this.logger.log("_makeAndDisplayGrid",this.config);
             var context = this.getContext(),
@@ -127,6 +153,7 @@
             this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
                 type: this.getSetting('type'),
                 query_string: this.getSetting('query_string'),
+                multi_field_list: this.multi_field_list,
                 listeners: {
                     settingsChosen: function(dialog,returned_config) {
                         this.config = Ext.Object.merge(config,returned_config);
