@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Fri Dec 06 2013 08:55:11 GMT-0800 (PST) -->
+    <!--  Build Date: Fri Dec 06 2013 10:19:20 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Fri Dec 06 2013 08:55:11 GMT-0800 (PST)";
-        var CHECKSUM = 58346112630;
+        var APP_BUILD_DATE = "Fri Dec 06 2013 10:19:20 GMT-0800 (PST)";
+        var CHECKSUM = 49880508760;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -213,19 +213,16 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     constructor: function(config) {
-        console.log('constructor');
         this.mergeConfig(config);
         this.callParent([this.config]);
     },
 
     initEvents: function() {
-        console.log('initEvents');
         this.callParent(arguments);
 
     },
 
     setValue: function(values) {
-        console.log('setValue',values);
         this.selectedValues.clear();
 
         if(Ext.isArray(values)) {
@@ -250,7 +247,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
 
     // convert the records into a separated string
     getValue: function() {
-        console.log('getValue');
         var records = this._getRecordValue();
         var value = [];
         
@@ -264,7 +260,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     getSubmitData: function() {
-        console.log('getSubmitData');
         var fieldNames = [];
         this.selectedValues.eachKey(function(key, value) {
             if(value.get('name')) {
@@ -282,7 +277,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * @private
      */
     createPicker: function() {
-        console.log('createPicker');
         this.picker = Ext.create(this.pickerType, this.pickerCfg);
         this.picker.add(this._createList());
         return this.picker;
@@ -292,7 +286,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * @private
      */
     alignPicker: function() {
-        console.log('alignPicker');
         var heightAbove = this.getPosition()[1] - Ext.getBody().getScroll().top,
             heightBelow = Ext.Element.getViewHeight() - heightAbove - this.getHeight(),
             space = Math.max(heightAbove, heightBelow);
@@ -314,7 +307,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     expand: function() {
-        console.log('expand');
         this.setPlaceholderText(this.loadingText);
         if (this.store) {
             Rally.ui.picker.MultiObjectPicker.superclass.expand.call(this);
@@ -331,7 +323,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     onRender: function() {
-        console.log('onRender');
         this.callParent(arguments);
         if (!this.hideTrigger) {
             this.inputEl.addCls('rui-multi-object-picker-no-trigger');
@@ -339,7 +330,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     _createStoreAndExpand: function() {
-        console.log('_createStoreAndExpand');
         var me = this;
         Ext.define('Choice',{
             extend:'Ext.data.Model',
@@ -358,7 +348,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
         Rally.data.PreferenceManager.load({
             filterByName: key,
             success: function(prefs) {
-                console.log('success');
                 var values = [];
                 if ( prefs && prefs[key] ) {
                     Ext.Array.each(Ext.JSON.decode(prefs[key]),function(value){
@@ -391,7 +380,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      */
     _getRecordValue: function() {
         var me = this;
-        console.log('_getRecordValue');
         var recordArray = [];
         this.selectedValues.eachKey(function(key, value) {
             var record = this.store.findRecord(this.selectionKey, new RegExp('^' + value.get(this.selectionKey) + '$'));
@@ -404,7 +392,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * Create the BoundList based on #listCfg and setup listeners to some of its events.
      */
     _createList: function() {
-        console.log('_createList');
         var listCfg = {
             store: this.store,
             tpl: this._getListTpl()
@@ -425,7 +412,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * Select the checkboxes for the selected records
      */
     _selectCheckboxes: function() {
-        console.log('_selectCheckboxes');
         if (this.list && this.list.getSelectionModel()) {
             Ext.each(this.list.getSelectionModel().getSelection(), function(record) {
                 this._selectRowCheckbox(record.get(this.recordKey));
@@ -437,7 +423,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * Reset the store, such as removing any previous filters.
      */
     _resetStore: function() {
-        console.log('_resetStore');
         this.store.clearFilter();
         this.store.clearGrouping();
         this.store.requester = this;
@@ -453,7 +438,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     _alignPickerAndList: function() {
-        console.log('_alignPickerAndList');
         if (this.isExpanded) {
             if (this.matchFieldWidth) {
 
@@ -474,7 +458,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * Determine the height of the picker panel by adding up the heights of all its children items.
      */
     _getPickerHeight: function() {
-        console.log('_getPickerHeight');
         var totalHeight = 0;
         Ext.each(this.picker.items.getRange(), function(item) {
             totalHeight += item.getHeight();
@@ -486,7 +469,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * Ensure that the selected rows in the list match the internal array of selected values
      */
     _syncSelection: function() {
-        console.log('_syncSelection');
         if (this.list) {
             var selectionModel = this.list.getSelectionModel();
             selectionModel.deselectAll(true);
@@ -499,7 +481,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * @param recordId the value of the record's ID, which corresponds to the row
      */
     _getOptionCheckbox: function(recordId) {
-        console.log('_getOptionCheckbox',recordId);
         var checkboxSelector = 'li.' + this.id + '.' + this._getOptionClass(recordId) + ' .rui-picker-checkbox';
         return Ext.get(Ext.DomQuery.selectNode(checkboxSelector));
     },
@@ -508,12 +489,10 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * @param recordId the value of the record's ID, which corresponds to the row
      */
     _getOptionClass: function(recordId) {
-        console.log('_getOptionClass',recordId);
         return 'rui-multi-object-picker-option-id-' + recordId.toString();
     },
 
     _selectRowCheckbox: function(recordId) {
-        console.log('_selectRowCheckbox',recordId);
         var checkbox = this._getOptionCheckbox(recordId);
         if (checkbox) {
             checkbox.addCls('rui-picker-cb-checked');
@@ -521,17 +500,14 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     _deselectRowCheckbox: function(recordId) {
-        console.log('_deselectRowCheckbox',recordId);
         this._getOptionCheckbox(recordId).removeCls('rui-picker-cb-checked');
     },
 
     _isRecordInList: function(record) {
-        console.log('_isRecordInList');
         return this.list.getNode(record) ? true : false;
     },
 
     _autoExpand: function() {
-        console.log('_autoExpand');
         if (this.autoExpand && (!this.isExpanded)) {
             this.onTriggerClick();
         }
@@ -542,7 +518,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * @return {Ext.XTemplate} the XTemplate for the list.
      */
     _getListTpl: function() {
-        console.log('_getListTpl');
         var me = this;
         return Ext.create('Ext.XTemplate',
             '<tpl exec="this.headerRendered = false"></tpl>',
@@ -584,7 +559,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     _onSelect: function(record, event) {
-        console.log('_onSelect');
         var key = record.get(this.selectionKey);
         this.selectedValues.add(key, record);
         this._syncSelection();
@@ -595,7 +569,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     _onDeselect: function(record, event) {
-        console.log('_onDeselect');
         var key = record.get(this.selectionKey);
         this.selectedValues.remove(this.selectedValues.get(key));
         this._syncSelection();
@@ -606,7 +579,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     _clickedRowCheckbox: function(event) {
-        console.log('_clickedRowCheckbox');
         //selected the whole row and rowSelectable == true
         if (this.getRowSelectable() &&
             (Ext.get(event.getTarget()).hasCls(this.rowCls) ||
@@ -628,7 +600,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * @private
      */
     _onListItemClick: function(view, record, itemEl, index, event) {
-        console.log('_onListItemClick');
         if(Ext.Array.contains(this.alwaysSelectedValues, record.get(this.selectionKey))) {
             return false;
         }
@@ -643,7 +614,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     _onStoreLoad: function() {
-        console.log('_onStoreLoad');
         this.removePlaceholderText();
         this.initFiltering();
         this.groupRecords(this._getRecordValue());
@@ -654,13 +624,11 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     _onListRefresh: function() {
-        console.log('_onListRefresh');
         this._syncSelection();
         this.alignPicker();
     },
 
     _groupRecordsAndScroll: function(selectedRecords) {
-        console.log('_groupRecordsAndScroll',selectedRecords);
         var scroll = 0;
         if(this.maintainScrollPosition) {
             scroll = this.list.listEl.getScroll();
@@ -675,9 +643,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
         }
     },
     groupRecords: function(selectedRecords) {
-        console.log('groupRecords',selectedRecords);
-        
-        
         var selectedText = this.selectedTextLabel,
             availableText = this.availableTextLabel,
             attr = this.groupName,
@@ -728,7 +693,14 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
           * A string array of names of fields that are multiselect enabled
           * [@String] fields 
           */
-         multi_field_list: []
+         multi_field_list: [],
+         /**
+          * A string array of names of fields that were chosen for fetching (the
+          * columns already picked)
+          * 
+          * [@String] 
+          */
+         fetch_list: []
     },
     items: {
         xtype: 'panel',
@@ -740,13 +712,11 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         items: [
             {
                 xtype: 'container',
-                itemId: 'model_selector_box',
-                height: 50
+                itemId: 'model_selector_box'
             },
             {
                 xtype:'container',
-                itemId: 'column_selector_box',
-                height: 100
+                itemId: 'column_selector_box'
             },
             /*{
                 xtype:'container',
@@ -833,6 +803,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                         text: field.get('displayName'),
                         editor: {
                             xtype:'tsmultipicker',
+                            autoExpand: true,
                             field_name:field.get('name')
                         }
                     });
@@ -902,18 +873,18 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     },
     _addColumnChooser: function() {
         var me = this;
-        
         this.down('#column_selector_box').removeAll();
         var cb = this.down('#column_selector_box').add({
+            alwaysExpanded: true,
             xtype: 'rallyfieldpicker',
-            autoExpand: false,
-            height: 50,
+            autoExpand: true,
             multi_field_list: this.multi_field_list,
             modelTypes: [me.type],
             itemId: 'column_chooser',
             labelWidth: 75,
             fieldLabel: 'Columns',
-            ts_field_filter: this._filterOutTextFields
+            ts_field_filter: this._filterOutTextFields,
+            value:this.fetch_list
         });
     },
     _addMultiChoiceColumnChooser: function() {
@@ -923,7 +894,6 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         var cb = this.down('#multichoice_column_selector_box').add({
             xtype: 'rallyfieldpicker',
             autoExpand: false,
-            height: 50,
             modelTypes: [me.type],
             itemId: 'multichoice_column_chooser',
             labelWidth: 75,
@@ -973,38 +943,6 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             return false;
         }
         return false;
-    },
-    _filterOutExceptChoices: function(store,records) {
-        store.filter([{
-            filterFn:function(field){ 
-                var attribute_type = field.get('fieldDefinition').attributeDefinition.AttributeType;
-                if (  attribute_type == "BOOLEAN" ) {
-                    return true;
-                }
-                if ( attribute_type == "STRING" || attribute_type == "STATE" ) {
-                    if ( field.get('fieldDefinition').attributeDefinition.Constrained ) {
-                        return true;
-                    }
-                }
-                if ( field.get('name') === 'State' ) { 
-                    return true;
-                }
-                //console.log(field.get('name'),field.get('fieldDefinition').attributeDefinition.AttributeType);
-                return false;
-            } 
-        }]);
-    },
-    _filterOutExceptNumbers: function(store,records) {
-        store.filter([{
-            filterFn:function(field){ 
-                var attribute_type = field.get('fieldDefinition').attributeDefinition.AttributeType;
-                if (  attribute_type == "QUANTITY" || attribute_type == "INTEGER" || attribute_type == "DECIMAL" ) {
-                    return true;
-                }
-                if ( field.get('name') == 'Count' ) { return true; }
-                return false;
-            } 
-        }]);
     }
     
 });
@@ -1021,185 +959,179 @@ Ext.define('TSStringFilter',{
         return this.query_string;
     }
 });
-(function() {
-    var Ext = window.Ext4 || window.Ext;
-    var appAutoScroll = Ext.isIE7 || Ext.isIE8;
-    var gridAutoScroll = !appAutoScroll;
+Ext.define('CustomApp', {
+    extend: 'Rally.app.App',
 
-    Ext.define('CustomApp', {
-        extend: 'Rally.app.App',
+    requires: [
+        'Rally.data.util.Sorter',
+        'Rally.data.wsapi.Filter',
+        'Rally.ui.grid.Grid',
+        'Rally.data.ModelFactory',
+        'Rally.ui.grid.plugin.PercentDonePopoverPlugin'
+    ],
 
-        requires: [
-            'Rally.data.util.Sorter',
-            'Rally.data.wsapi.Filter',
-            'Rally.ui.grid.Grid',
-            'Rally.data.ModelFactory',
-            'Rally.ui.grid.plugin.PercentDonePopoverPlugin'
-        ],
+    items: [
+        { xtype:'container',itemId:'settings_box',margin: 10 },
+        { xtype:'container', itemId:'grid_box',margin: 10 }
+    ],
+    config: {
+        defaultSettings: {
+            type: 'hierarchicalrequirement',
+            fetch: "FormattedID,Name",
+            pageSize: 20
+        }
+    },
+    logger: new Rally.technicalservices.Logger(),
 
-        items: [
-            { xtype:'container',itemId:'settings_box',margin: 10 },
-            { xtype:'container', itemId:'grid_box',margin: 10 }
-        ],
-        config: {
-            defaultSettings: {
-                type: 'hierarchicalrequirement',
-                fetch: "FormattedID,Name",
-                pageSize: 20
-            }
-        },
-        logger: new Rally.technicalservices.Logger(),
-
-        autoScroll: appAutoScroll,
-
-        launch: function() {
-            var me = this;
-            
-            this._getMulitFieldList();
-            
-            this.down('#settings_box').add({
-                xtype: 'rallybutton',
-                text: 'Settings',
-                handler: function() {
-                    me._showSettingsDialog();
-                },
-                scope: me
-            });
-            
-            this._makeAndDisplayGrid();
-            
-        },
-        _getMulitFieldList: function() {
-            var me = this;
-            //var key = 'rally.techservices.fieldvalues.' + field_name;
-            var key = 'rally.techservices.fieldvalues.';
-            this.multi_field_list = [];
-            
-            Rally.data.PreferenceManager.load({
-                workspace: this.getContext().getWorkspace(),
-                additionalFilters: [{
-                    property:'Name',
-                    operator:'contains',
-                    value:key
-                }],
-                success: function(prefs) {
-                    me.logger.log("prefs",prefs);
-                    if ( prefs ) {
-                        Ext.Object.each(prefs,function(name,value){
-                            var name_array = name.split('.');
-                            var field_name = name_array[name_array.length - 1];
-                            me.multi_field_list.push(field_name);
-                        });
-                    }
-                }
-            });
-        },
-        _makeAndDisplayGrid: function() {
-            this.logger.log("_makeAndDisplayGrid",this.config);
-            var context = this.getContext(),
-                pageSize = this.getSetting('pageSize'),
-                fetch = this.getSetting('fetch'),
-                columns = this._getColumns(fetch);
-
-            if ( this.down('rallygrid') ) {
-                this.down('rallygrid').destroy();
-            }
-            
-            this.down('#grid_box').add({
-                xtype: 'rallygrid',
-                columnCfgs: columns,
-                enableColumnHide: false,
-                enableRanking: false,
-                enableBulkEdit: true,
-                autoScroll: gridAutoScroll,
-                plugins: this._getPlugins(columns),
-                storeConfig: {
-                    fetch: fetch,
-                    models: this.getSetting('type'),
-                    filters: this._getFilters(),
-                    pageSize: pageSize,
-                    sorters: Rally.data.util.Sorter.sorters(this.getSetting('order')),
-                    listeners: {
-                        load: this._loaded,
-                        scope: this
-                    }
-                },
-                pagingToolbarCfg: {
-                    pageSizes: [pageSize, 50, 100, 200, 1000]
-                }
-            });
-        },
+    launch: function() {
+        var me = this;
         
-        _loaded: function() { },
-
-        _getFilters: function() {
-            var filters = [],
-                query_string = this.getSetting('query_string');
-            filters = Ext.create('TSStringFilter',{query_string:query_string});
-            return filters;
-        },
-
-        _isSchedulableType: function(type) {
-            return _.contains(['hierarchicalrequirement', 'task', 'defect', 'defectsuite', 'testset'], type.toLowerCase());
-        },
-
-        _getFetchOnlyFields:function(){
-            return ['LatestDiscussionAgeInMinutes'];
-        },
-
-        _getColumns: function(fetch){
-            if ( this.getSetting('columns') ) {
-                this.logger.log("Using column definitions",this.getSetting('columns'));
-                return this.getSetting('columns');
+        this._getMulitFieldList();
+        
+        this.down('#settings_box').add({
+            xtype: 'rallybutton',
+            text: 'Settings',
+            handler: function() {
+                me._showSettingsDialog();
+            },
+            scope: me
+        });
+        
+        this._makeAndDisplayGrid();
+        
+    },
+    _getMulitFieldList: function() {
+        var me = this;
+        //var key = 'rally.techservices.fieldvalues.' + field_name;
+        var key = 'rally.techservices.fieldvalues.';
+        this.multi_field_list = [];
+        
+        Rally.data.PreferenceManager.load({
+            workspace: this.getContext().getWorkspace(),
+            additionalFilters: [{
+                property:'Name',
+                operator:'contains',
+                value:key
+            }],
+            success: function(prefs) {
+                me.logger.log("prefs",prefs);
+                if ( prefs ) {
+                    Ext.Object.each(prefs,function(name,value){
+                        var name_array = name.split('.');
+                        var field_name = name_array[name_array.length - 1];
+                        me.multi_field_list.push(field_name);
+                    });
+                }
             }
-            if (fetch) {
-                return Ext.Array.difference(fetch.split(','), this._getFetchOnlyFields());
-            }
-            return [];
-        },
+        });
+    },
+    _makeAndDisplayGrid: function() {
+        this.logger.log("_makeAndDisplayGrid",this.config);
+        var context = this.getContext(),
+            pageSize = this.getSetting('pageSize'),
+            fetch = this.getSetting('fetch'),
+            columns = this._getColumns(fetch);
 
-        _getPlugins: function(columns) {
-            var plugins = [];
-
-            if (Ext.Array.intersect(columns, ['PercentDoneByStoryPlanEstimate','PercentDoneByStoryCount']).length > 0) {
-                plugins.push('rallypercentdonepopoverplugin');
-            }
-
-            return plugins;
-        },
-        _showSettingsDialog: function() {
-            if ( this.dialog ) { this.dialog.destroy(); }
-            this.logger.log("old config",this.getSettings());
-            var config = this.config;
-            
-            //this.showSettings();
-            this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
-                type: this.getSetting('type'),
-                query_string: this.getSetting('query_string'),
-                multi_field_list: this.multi_field_list,
+        if ( this.down('rallygrid') ) {
+            this.down('rallygrid').destroy();
+        }
+        
+        this.down('#grid_box').add({
+            xtype: 'rallygrid',
+            columnCfgs: columns,
+            enableColumnHide: false,
+            enableRanking: false,
+            enableBulkEdit: true,
+            autoScroll: true,
+            plugins: this._getPlugins(columns),
+            storeConfig: {
+                fetch: fetch,
+                models: this.getSetting('type'),
+                filters: this._getFilters(),
+                pageSize: pageSize,
+                sorters: Rally.data.util.Sorter.sorters(this.getSetting('order')),
                 listeners: {
-                    settingsChosen: function(dialog,returned_config) {
-                        this.config = Ext.Object.merge(config,returned_config);
-
-                        this.logger.log("new config",returned_config,this.config);
-                        this._makeAndDisplayGrid();
-                    },
+                    load: this._loaded,
                     scope: this
                 }
-            });
-            this.dialog.show();
-        },
-        // override until we figure out problem with getSettingsFields
-        getSetting: function(field){
-            config = this.config;
-            if ( config[field] ) {
-                return config[field];
+            },
+            pagingToolbarCfg: {
+                pageSizes: [pageSize, 50, 100, 200, 1000]
             }
-            if ( config.defaultSettings[field] ) {
-                return config.defaultSettings[field];
-            }
-            return null;
+        });
+    },
+    
+    _loaded: function() { },
+
+    _getFilters: function() {
+        var filters = [],
+            query_string = this.getSetting('query_string');
+        filters = Ext.create('TSStringFilter',{query_string:query_string});
+        return filters;
+    },
+
+    _isSchedulableType: function(type) {
+        return _.contains(['hierarchicalrequirement', 'task', 'defect', 'defectsuite', 'testset'], type.toLowerCase());
+    },
+
+    _getFetchOnlyFields:function(){
+        return ['LatestDiscussionAgeInMinutes'];
+    },
+
+    _getColumns: function(fetch){
+        if ( this.getSetting('columns') ) {
+            this.logger.log("Using column definitions",this.getSetting('columns'));
+            return this.getSetting('columns');
         }
+        if (fetch) {
+            return Ext.Array.difference(fetch.split(','), this._getFetchOnlyFields());
+        }
+        return [];
+    },
+
+    _getPlugins: function(columns) {
+        var plugins = [];
+
+        if (Ext.Array.intersect(columns, ['PercentDoneByStoryPlanEstimate','PercentDoneByStoryCount']).length > 0) {
+            plugins.push('rallypercentdonepopoverplugin');
+        }
+
+        return plugins;
+    },
+    _showSettingsDialog: function() {
+        if ( this.dialog ) { this.dialog.destroy(); }
+        this.logger.log("old config",this.getSettings());
+        var config = this.config;
+        
+        //this.showSettings();
+        this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
+            type: this.getSetting('type'),
+            query_string: this.getSetting('query_string'),
+            multi_field_list: this.multi_field_list,
+            fetch_list: this.getSetting('fetch'),
+            listeners: {
+                settingsChosen: function(dialog,returned_config) {
+                    this.config = Ext.Object.merge(config,returned_config);
+
+                    this.logger.log("new config",returned_config,this.config);
+                    this._makeAndDisplayGrid();
+                },
+                scope: this
+            }
+        });
+        this.dialog.show();
+    },
+    // override until we figure out problem with getSettingsFields
+    getSetting: function(field){
+        config = this.config;
+        if ( config[field] ) {
+            return config[field];
+        }
+        if ( config.defaultSettings[field] ) {
+            return config.defaultSettings[field];
+        }
+        return null;
+    }
 //        getSettingsFields: function() {
 //            var model_filters = [{property:'ElementName',value:'Defect'},
 //                {property:'ElementName',value:'HierarchicalRequirement'}];
@@ -1223,8 +1155,7 @@ Ext.define('TSStringFilter',{
 //                }
 //            ];
 //        }
-    });
-})();
+});
             
                Rally.launchApp('CustomApp', {
                    name: 'Big Grid'

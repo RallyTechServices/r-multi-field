@@ -25,7 +25,14 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
           * A string array of names of fields that are multiselect enabled
           * [@String] fields 
           */
-         multi_field_list: []
+         multi_field_list: [],
+         /**
+          * A string array of names of fields that were chosen for fetching (the
+          * columns already picked)
+          * 
+          * [@String] 
+          */
+         fetch_list: []
     },
     items: {
         xtype: 'panel',
@@ -37,13 +44,11 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         items: [
             {
                 xtype: 'container',
-                itemId: 'model_selector_box',
-                height: 50
+                itemId: 'model_selector_box'
             },
             {
                 xtype:'container',
-                itemId: 'column_selector_box',
-                height: 100
+                itemId: 'column_selector_box'
             },
             /*{
                 xtype:'container',
@@ -130,6 +135,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                         text: field.get('displayName'),
                         editor: {
                             xtype:'tsmultipicker',
+                            autoExpand: true,
                             field_name:field.get('name')
                         }
                     });
@@ -199,18 +205,18 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     },
     _addColumnChooser: function() {
         var me = this;
-        
         this.down('#column_selector_box').removeAll();
         var cb = this.down('#column_selector_box').add({
+            alwaysExpanded: true,
             xtype: 'rallyfieldpicker',
-            autoExpand: false,
-            height: 50,
+            autoExpand: true,
             multi_field_list: this.multi_field_list,
             modelTypes: [me.type],
             itemId: 'column_chooser',
             labelWidth: 75,
             fieldLabel: 'Columns',
-            ts_field_filter: this._filterOutTextFields
+            ts_field_filter: this._filterOutTextFields,
+            value:this.fetch_list
         });
     },
     _addMultiChoiceColumnChooser: function() {
@@ -220,7 +226,6 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         var cb = this.down('#multichoice_column_selector_box').add({
             xtype: 'rallyfieldpicker',
             autoExpand: false,
-            height: 50,
             modelTypes: [me.type],
             itemId: 'multichoice_column_chooser',
             labelWidth: 75,
@@ -270,38 +275,6 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             return false;
         }
         return false;
-    },
-    _filterOutExceptChoices: function(store,records) {
-        store.filter([{
-            filterFn:function(field){ 
-                var attribute_type = field.get('fieldDefinition').attributeDefinition.AttributeType;
-                if (  attribute_type == "BOOLEAN" ) {
-                    return true;
-                }
-                if ( attribute_type == "STRING" || attribute_type == "STATE" ) {
-                    if ( field.get('fieldDefinition').attributeDefinition.Constrained ) {
-                        return true;
-                    }
-                }
-                if ( field.get('name') === 'State' ) { 
-                    return true;
-                }
-                //console.log(field.get('name'),field.get('fieldDefinition').attributeDefinition.AttributeType);
-                return false;
-            } 
-        }]);
-    },
-    _filterOutExceptNumbers: function(store,records) {
-        store.filter([{
-            filterFn:function(field){ 
-                var attribute_type = field.get('fieldDefinition').attributeDefinition.AttributeType;
-                if (  attribute_type == "QUANTITY" || attribute_type == "INTEGER" || attribute_type == "DECIMAL" ) {
-                    return true;
-                }
-                if ( field.get('name') == 'Count' ) { return true; }
-                return false;
-            } 
-        }]);
     }
     
 });
