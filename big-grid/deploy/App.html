@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Thu Dec 05 2013 18:30:19 GMT-0800 (PST) -->
+    <!--  Build Date: Thu Dec 05 2013 18:55:14 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Thu Dec 05 2013 18:30:19 GMT-0800 (PST)";
-        var CHECKSUM = 16809950996;
+        var APP_BUILD_DATE = "Thu Dec 05 2013 18:55:14 GMT-0800 (PST)";
+        var CHECKSUM = 16868234764;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -496,7 +496,8 @@ Ext.define('TSStringFilter',{
         config: {
             defaultSettings: {
                 type: 'hierarchicalrequirement',
-                fetch: "FormattedID,Name"
+                fetch: "FormattedID,Name",
+                pageSize: 20
             }
         },
         logger: new Rally.technicalservices.Logger(),
@@ -550,7 +551,7 @@ Ext.define('TSStringFilter',{
                     }
                 },
                 pagingToolbarCfg: {
-                    pageSizes: [pageSize]
+                    pageSizes: [pageSize, 50, 100, 200, 1000]
                 }
             });
         },

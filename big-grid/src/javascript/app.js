@@ -21,7 +21,8 @@
         config: {
             defaultSettings: {
                 type: 'hierarchicalrequirement',
-                fetch: "FormattedID,Name"
+                fetch: "FormattedID,Name",
+                pageSize: 20
             }
         },
         logger: new Rally.technicalservices.Logger(),
@@ -75,7 +76,7 @@
                     }
                 },
                 pagingToolbarCfg: {
-                    pageSizes: [pageSize]
+                    pageSizes: [pageSize, 50, 100, 200, 1000]
                 }
             });
         },
@@ -98,6 +99,9 @@
         },
 
         _getColumns: function(fetch){
+            if ( this.columns ) {
+                return this.columns;
+            }
             if (fetch) {
                 return Ext.Array.difference(fetch.split(','), this._getFetchOnlyFields());
             }

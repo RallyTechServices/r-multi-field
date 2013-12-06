@@ -3,11 +3,11 @@
 <head>
     <title>Field Content Definer</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Mon Nov 11 2013 16:39:17 GMT-0800 (PST) -->
+    <!--  Build Date: Thu Dec 05 2013 19:04:18 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Mon Nov 11 2013 16:39:17 GMT-0800 (PST)";
-        var CHECKSUM = "ab7f6a5799926cdd3c66e85e6572845f";
+        var APP_BUILD_DATE = "Thu Dec 05 2013 19:04:18 GMT-0800 (PST)";
+        var CHECKSUM = "df156da61d329910f8bc57ce9b3065f0";
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -152,7 +152,14 @@ Ext.define('CustomApp', {
     _filterOutExceptText: function(store,records) {
         store.filter([{
             filterFn:function(field){ 
-                return field.get('fieldDefinition').attributeDefinition.AttributeType == "TEXT";
+                var valid = false;
+                if ( field.get('name') == "Description" || field.get('name') == "Notes" ) {
+                    return false;
+                }
+                if ( field.get('fieldDefinition').attributeDefinition.AttributeType == "TEXT" ) {
+                    valid = true;
+                }
+                return valid;
             } 
         }]);
         this.down('#field_selector').setValue(store.getAt(1));

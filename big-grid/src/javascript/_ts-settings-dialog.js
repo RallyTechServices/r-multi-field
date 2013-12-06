@@ -131,7 +131,11 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             Ext.Array.each(fields,function(field){
                 columns.push({
                     dataIndex:field.get('name'),
-                    text: field.get('displayName')
+                    text: field.get('displayName'),
+                    editor: {
+                        xtype:'tsmultipicker',
+                        field_name:field.get('name')
+                    }
                 });
                 fetch.push(field.get('name'));
             });

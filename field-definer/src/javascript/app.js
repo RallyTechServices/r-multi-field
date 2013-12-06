@@ -34,7 +34,14 @@ Ext.define('CustomApp', {
     _filterOutExceptText: function(store,records) {
         store.filter([{
             filterFn:function(field){ 
-                return field.get('fieldDefinition').attributeDefinition.AttributeType == "TEXT";
+                var valid = false;
+                if ( field.get('name') == "Description" || field.get('name') == "Notes" ) {
+                    return false;
+                }
+                if ( field.get('fieldDefinition').attributeDefinition.AttributeType == "TEXT" ) {
+                    valid = true;
+                }
+                return valid;
             } 
         }]);
         this.down('#field_selector').setValue(store.getAt(1));
