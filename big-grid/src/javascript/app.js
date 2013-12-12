@@ -25,18 +25,33 @@ Ext.define('CustomApp', {
     launch: function() {
         var me = this;
         
-        this._getMulitFieldList();
-        
-        this.down('#settings_box').add({
-            xtype: 'rallybutton',
-            text: 'Settings',
-            handler: function() {
-                me._showSettingsDialog();
-            },
-            scope: me
+        Rally.data.PreferenceManager.load({
+            appID: this.getAppId(),
+            filterByUser: true,
+            success: function(prefs) {
+                me.logger.log("got prefs ", prefs);
+                var key = "rally.technicalservices.bigmulti.settings";
+                if ( prefs && prefs[key] ) {
+                    me.config = Ext.JSON.decode(prefs[key]);
+                }
+                me.logger.log("config is now ", me.config);
+                
+                me._getMulitFieldList();
+                
+                me.down('#settings_box').add({
+                    xtype: 'rallybutton',
+                    text: 'Settings',
+                    handler: function() {
+                        me._showSettingsDialog();
+                    },
+                    scope: me
+                });
+                
+                me._makeAndDisplayGrid();
+            }
         });
+
         
-        this._makeAndDisplayGrid();
         
     },
     _getMulitFieldList: function() {
@@ -139,7 +154,6 @@ Ext.define('CustomApp', {
     },
     _showSettingsDialog: function() {
         if ( this.dialog ) { this.dialog.destroy(); }
-        this.logger.log("old config",this.getSettings());
         var config = this.config;
         
         //this.showSettings();
@@ -150,15 +164,33 @@ Ext.define('CustomApp', {
             fetch_list: this.getSetting('fetch'),
             listeners: {
                 settingsChosen: function(dialog,returned_config) {
+                    var me = this;
                     this.config = Ext.Object.merge(config,returned_config);
-
-                    this.logger.log("new config",returned_config,this.config);
+                    this._saveConfig(this.config);
                     this._makeAndDisplayGrid();
                 },
                 scope: this
             }
         });
         this.dialog.show();
+    },
+    _saveConfig: function(config) {
+        var me = this;
+        this.logger.log("new config",config);
+        delete config["config"];
+        delete config["context"];
+        delete config["settings"];
+        
+        Rally.data.PreferenceManager.update({
+            appID: this.getAppId(),
+            filterByUser: true,
+            settings: { 
+                'rally.technicalservices.bigmulti.settings': Ext.JSON.encode(config)
+            },
+            success: function() {
+                me.logger.log("Saved settings",config);
+            }
+        });
     },
     // override until we figure out problem with getSettingsFields
     getSetting: function(field){
