@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Wed Dec 11 2013 17:24:00 GMT-0800 (PST) -->
+    <!--  Build Date: Thu Dec 19 2013 19:42:49 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Wed Dec 11 2013 17:24:00 GMT-0800 (PST)";
-        var CHECKSUM = 19180979248;
+        var APP_BUILD_DATE = "Thu Dec 19 2013 19:42:49 GMT-0800 (PST)";
+        var CHECKSUM = 19524361581;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -186,7 +186,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
          */
         artifact_types: [
             {Name:'UserStory',Value:'hierarchicalrequirement'},
-            {Name:'Defect',Value:'Defect'}
+            {Name:'Defect',Value:'Defect'},
+            {Name:'Release',Value:'Release'}
         ],
         /**
          * A string to apply to choose records that are allowed in the calculations --
@@ -424,7 +425,12 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     },
     _filterOutTextFields: function(field){
         var attribute_defn = field.attributeDefinition;
-        
+        if ( ! attribute_defn ) {
+            return false;
+        }
+        if ( attribute_defn.ElementName == "RevisionHistory" ) {
+            return false;
+        }
         if ( attribute_defn ) {
             var attribute_type = attribute_defn.AttributeType;
             if ( attribute_type == "TEXT" ) {

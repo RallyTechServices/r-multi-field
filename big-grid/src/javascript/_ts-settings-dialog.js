@@ -11,7 +11,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
          */
         artifact_types: [
             {Name:'UserStory',Value:'hierarchicalrequirement'},
-            {Name:'Defect',Value:'Defect'}
+            {Name:'Defect',Value:'Defect'},
+            {Name:'Release',Value:'Release'}
         ],
         /**
          * A string to apply to choose records that are allowed in the calculations --
@@ -249,7 +250,12 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     },
     _filterOutTextFields: function(field){
         var attribute_defn = field.attributeDefinition;
-        
+        if ( ! attribute_defn ) {
+            return false;
+        }
+        if ( attribute_defn.ElementName == "RevisionHistory" ) {
+            return false;
+        }
         if ( attribute_defn ) {
             var attribute_type = attribute_defn.AttributeType;
             if ( attribute_type == "TEXT" ) {
