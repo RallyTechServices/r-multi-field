@@ -80,6 +80,7 @@ Ext.define('CustomApp', {
         });
     },
     _makeAndDisplayGrid: function() {
+        var me = this;
         this.logger.log("_makeAndDisplayGrid",this.config);
         var context = this.getContext(),
             pageSize = this.getSetting('pageSize'),
@@ -110,7 +111,33 @@ Ext.define('CustomApp', {
                 }
             },
             pagingToolbarCfg: {
-                pageSizes: [pageSize, 50, 100, 200, 1000]
+                stateful: true,
+                stateId: 'rally-techservices-biggrid-toolbar',
+                stateEvents: ['change'],
+                pageSizes: [pageSize, 50, 100, 200, 1000],
+                listeners: {
+                    change: function(toolbar,pageData) {
+                        me.logger.log('change',pageData);
+                    },
+                    statesave: function(toolbar,state){
+                        me.logger.log('statesave',state);
+                    },
+                    staterestore: function(toolbar,state){
+                        me.logger.log('staterestore',state);
+                        var store = this.getStore();
+                        if ( store ) {
+                            if ( state && state.currentPage ) {
+                                store.currentPage = state.currentPage;
+                            }
+                            if ( state && state.pageSize ) {
+                                store.pageSize = state.pageSize;
+                            }
+                        }
+                    }
+                },
+                getState: function() {
+                    return this._getPageData();
+                }
             }
         });
     },
