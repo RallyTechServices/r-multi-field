@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Tue Jan 07 2014 17:55:26 GMT-0800 (PST) -->
+    <!--  Build Date: Sat Jan 18 2014 18:18:13 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Tue Jan 07 2014 17:55:26 GMT-0800 (PST)";
-        var CHECKSUM = 21282073370;
+        var APP_BUILD_DATE = "Sat Jan 18 2014 18:18:13 GMT-0800 (PST)";
+        var CHECKSUM = 38224266031;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -15,6 +15,247 @@
     <script type="text/javascript">
         Rally.onReady(function() {
              
+(function() {
+    var Ext = window.Ext4 || window.Ext;
+
+    Ext.define('Rally.ui.menu.bulk.Tag', {
+        extend: 'Rally.ui.menu.bulk.MenuItem',
+        alias: 'widget.rallyrecordmenuitembulktag',
+
+        clientMetrics: [{
+            beginMethod: '_onTagSelect',
+            endMethod: 'onSuccess',
+            description: 'bulk action complete'
+        }],
+
+        config: {
+            text: 'Tag...',
+            handler: function() {
+                this._onBulkTagClicked();
+            },
+            predicate: function(records) {
+                return _.every(records, function(record) {
+                    return record.self.isArtifact();
+                });
+            },
+
+            prepareRecords: function(records, selectedTags) {
+                var successfulRecords = [];
+                
+                _.each(records, function(record) {
+                    record.beginEdit();
+                    var partialTagRefs = _.invoke(selectedTags.partial, 'get', '_ref'),
+                        fullTagRefs = _.invoke(selectedTags.full, 'get', '_ref'),
+                        existingTagRefs = _.pluck(record.get('Tags')._tagsNameArray, '_ref'),
+                        newTagRefs = _(existingTagRefs).intersection(partialTagRefs).union(fullTagRefs).value();
+                        newTagArray = _.map(newTagRefs, function(ref) { return {_ref: ref}; });
+
+                    if (_.isEqual(existingTagRefs, newTagRefs)) {
+                        successfulRecords.push(record);
+                        record.cancelEdit();
+                    } else {
+                        record.set('Tags', newTagArray);
+                    }
+                });
+
+                return successfulRecords;
+            }
+        },
+
+        constructor: function(config) {
+            this.mergeConfig(config);
+            this.callParent(arguments);
+        },
+
+        _onBulkTagClicked: function() {
+            Ext.create('Rally.technicalservices.TagDialog', {
+                autoShow: true,
+                records: this.records,
+                title: 'BULK TAG EDIT',
+                listeners: {
+                    tagselect: this._onTagSelect,
+                    scope: this
+                }
+            });
+        },
+
+        _onTagSelect: function(dialog, selectedTags) {
+            if (this.onBeforeAction(this.records) === false) {
+                return;
+            }
+
+            this.saveRecords(this.records, selectedTags);
+        },
+
+        /**
+         * @override
+         * @inheritdoc
+         */
+        onSuccess: function (successfulRecords, unsuccessfulRecords, selectedTags, errorMessage) {
+            var message = [
+                'Tags updated for',
+                successfulRecords.length,
+                (successfulRecords.length === 1 ? 'item' : 'items')
+            ].join(' ');
+
+            if(successfulRecords.length === this.records.length) {
+                Rally.ui.notify.Notifier.show({ message: message + '.' });
+            } else {
+                Rally.ui.notify.Notifier.showWarning({
+                    message: [message, ', but ', unsuccessfulRecords.length, ' failed: ', errorMessage].join(' ')
+                });
+            }
+            Ext.callback(this.onActionComplete, null, [successfulRecords, unsuccessfulRecords]);
+        }
+    });
+})();
+Ext.define('Rally.technicalservices.TagDialog',{
+    extend: 'Rally.ui.dialog.Dialog',
+    alias: 'widget.tstagdialog',
+    config: {
+        /* default settings. pass new ones in */
+        autoShow: true,
+        records:[],
+        title: 'Tag Edit'
+    },
+    items: {
+        xtype: 'panel',
+        border: false,
+        defaults: {
+            padding: 5,
+            margin: 5
+        },
+        items: [
+            {
+                xtype: 'container',
+                itemId: 'tag_selector_box'
+            }
+        ]
+    },
+    constructor: function(config){
+        this.mergeConfig(config);
+        this.callParent([this.config]);
+    },
+    initComponent: function() {
+        this.callParent(arguments);
+        this.addEvents(
+            /**
+             * @event _tagselect
+             * Fires when user clicks done after making settings choices
+             * @param {Rally.technicalservices.SettingsDialog} this
+             * @param [tags]
+             */
+            'tagselect',
+            /**
+             * @event cancelChosen
+             * Fires when user clicks the cancel button
+             */
+            'cancelChosen'
+        );
+        this._buildButtons();
+        this._addChoosers();
+    },
+    _buildButtons: function() {
+        this.down('panel').addDocked({
+            xtype: 'toolbar',
+            dock: 'bottom',
+            padding: '0 0 10 0',
+            layout: {
+                type: 'hbox',
+                pack: 'center'
+            },
+            ui: 'footer',
+            items: [
+                {
+                    xtype: 'rallybutton',
+                    text: 'Save',
+                    scope: this,
+                    userAction: 'clicked done in dialog',
+                    handler: function() {
+                        this.fireEvent('tagselect', this, this._getConfig());
+                        this.close();
+                    }
+                },
+                {
+                    xtype: 'rallybutton',
+                    text: 'Cancel',
+                    handler: function() {
+                        this.fireEvent('cancelChosen');
+                        this.close()
+                    },
+                    scope: this
+                }
+            ]
+        });
+    },
+    _getConfig: function() {
+        var me = this;
+        var config = {};
+        if ( this.down('#model_chooser') ) {
+            config.type = this.down('#model_chooser').getValue();
+        }
+        var columns = [];
+        var fetch = [];
+            
+        if ( this.down('#column_chooser') ) {
+            var fields = this.down('#column_chooser').getValue();
+            Ext.Array.each(fields,function(field){
+                if ( Ext.Array.contains(me.multi_field_list,field.get('name') ) ) {
+                    columns.push({
+                        dataIndex:field.get('name'),
+                        text: field.get('displayName'),
+                        editor: {
+                            xtype:'tsmultipicker',
+                            autoExpand: true,
+                            field_name:field.get('name')
+                        }
+                    });
+                } else {
+                    columns.push({
+                        dataIndex:field.get('name'),
+                        text: field.get('displayName')
+                    }); 
+                }
+                fetch.push(field.get('name'));
+            });
+        }
+        if ( this.down('#multichoice_column_chooser') ) {
+            var fields = this.down('#multichoice_column_chooser').getValue();
+            Ext.Array.each(fields,function(field){
+                columns.push({
+                    dataIndex:field.get('name'),
+                    text: field.get('displayName'),
+                    editor: {
+                        xtype:'tsmultipicker',
+                        field_name:field.get('name')
+                    }
+                });
+                fetch.push(field.get('name'));
+            });
+        }
+
+        config.columns = columns;
+        config.fetch = fetch.join(',');
+            
+        if ( this.down('#query_chooser') ) {
+            config.query_string = this.down('#query_chooser').getValue();
+        }
+        return config;
+    },
+    _addChoosers: function() {
+        var me = this;
+        this._addTagChooser();
+        
+    },
+    _addTagChooser: function() {
+        var me = this;
+
+        this.down('#tag_selector_box').add({
+             xtype: 'rallytagpicker',
+             autoExpand: true
+        });
+    }
+});
 Ext.override(Rally.ui.picker.FieldPicker,{
 
     _buildStoreData: function(models) {
@@ -173,6 +414,21 @@ Ext.define('Rally.technicalservices.Logger',{
 
 });
 
+Ext.override(Rally.ui.menu.bulk.RecordMenu,{
+    items: [
+        {xtype: 'rallyrecordmenuitembulkedit'},
+        {xtype: 'rallyrecordmenuitembulktag'},
+        {xtype: 'rallyrecordmenuitembulkparent'},
+        {xtype: 'rallyrecordmenuitembulkdefecttouserstory'},
+        {xtype: 'rallyrecordmenuitembulktasktoworkproduct'},
+        {xtype: 'rallyrecordmenuitembulktestcasetoworkproduct'},
+        {xtype: 'rallyrecordmenuitembulktestcasetotestfolder'}
+    ]
+//    initComponent: function () {
+//        this.items = this._getMenuItems();
+//        this.callParent(arguments);
+//    }
+});
 Ext.define('Rally.technicalservices.SettingsDialog',{
     extend: 'Rally.ui.dialog.Dialog',
     alias: 'widget.tssettingsdialog',
