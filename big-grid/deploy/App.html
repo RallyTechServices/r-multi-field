@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Sat Jan 18 2014 18:18:13 GMT-0800 (PST) -->
+    <!--  Build Date: Sat Jan 18 2014 19:09:51 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Sat Jan 18 2014 18:18:13 GMT-0800 (PST)";
-        var CHECKSUM = 38224266031;
+        var APP_BUILD_DATE = "Sat Jan 18 2014 19:09:51 GMT-0800 (PST)";
+        var CHECKSUM = 40602020095;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -41,19 +41,25 @@
 
             prepareRecords: function(records, selectedTags) {
                 var successfulRecords = [];
-                
+                console.log("tags",selectedTags);
                 _.each(records, function(record) {
                     record.beginEdit();
                     var partialTagRefs = _.invoke(selectedTags.partial, 'get', '_ref'),
                         fullTagRefs = _.invoke(selectedTags.full, 'get', '_ref'),
-                        existingTagRefs = _.pluck(record.get('Tags')._tagsNameArray, '_ref'),
-                        newTagRefs = _(existingTagRefs).intersection(partialTagRefs).union(fullTagRefs).value();
-                        newTagArray = _.map(newTagRefs, function(ref) { return {_ref: ref}; });
+                        selectedTagRefs = _.invoke(selectedTags,'get','_ref'),
+                        existingTagRefs = _.pluck(record.get('Tags')._tagsNameArray, '_ref');
+                        
+                    // var newTagRefs = _(existingTagRefs).intersection(partialTagRefs).union(fullTagRefs).value();
+                    var newTagRefs = _(existingTagRefs).union(selectedTagRefs).value();
+                        
+                    var newTagArray = _.map(newTagRefs, function(ref) { return {_ref: ref}; });
 
                     if (_.isEqual(existingTagRefs, newTagRefs)) {
+                        console.log('isequal',existingTagRefs,newTagRefs);
                         successfulRecords.push(record);
                         record.cancelEdit();
                     } else {
+                        console.log('setting record');
                         record.set('Tags', newTagArray);
                     }
                 });
@@ -66,7 +72,55 @@
             this.mergeConfig(config);
             this.callParent(arguments);
         },
+        saveRecords: function(records, args) {
+            var me = this,
+                successfulRecords = this.prepareRecords(records, args);
+console.log('saveRecords',successfulRecords);
 
+            if (successfulRecords.length === records.length) {
+                me.onSuccess(successfulRecords, [], args);
+            } else {
+                
+                var records_to_update = _.difference(records, successfulRecords);
+                Ext.Array.each(records_to_update,function(record){
+                    record.save({
+                        callback: function(result, operation) {
+                            if(operation.wasSuccessful()) {
+                                //Great success
+                            } else {
+                                // problem
+                            }
+                        }
+                    });
+                });
+                me.onSuccess(records_to_update, [], args, ".");
+
+
+//                Ext.create('Rally.data.wsapi.batch.Store', {
+//                    requester: this,
+//                    data: _.difference(records, successfulRecords)
+//                }).sync({
+//                    callback: function(batchOptions) {
+//                        var resultSet = batchOptions.operations[0].resultSet;
+//                        successfulRecords = successfulRecords.concat(_.filter(records, function(record) {
+//                            return _.any(resultSet.records, function(r) {
+//                                return r.get('_ref') === record.get('_ref');
+//                            });
+//                        }));
+//
+//                        var unsuccessfulRecords = _.difference(records, successfulRecords);
+//                        if(successfulRecords.length) {
+//                            me.onSuccess(successfulRecords, unsuccessfulRecords, args, resultSet.message);
+//                        } else {
+//                            Rally.ui.notify.Notifier.showError({
+//                                message: resultSet.message
+//                            });
+//                            Ext.callback(me.onActionComplete, null, [successfulRecords, unsuccessfulRecords]);
+//                        }
+//                    }
+//                });
+            }
+        },
         _onBulkTagClicked: function() {
             Ext.create('Rally.technicalservices.TagDialog', {
                 autoShow: true,
@@ -83,7 +137,6 @@
             if (this.onBeforeAction(this.records) === false) {
                 return;
             }
-
             this.saveRecords(this.records, selectedTags);
         },
 
@@ -128,7 +181,8 @@ Ext.define('Rally.technicalservices.TagDialog',{
         items: [
             {
                 xtype: 'container',
-                itemId: 'tag_selector_box'
+                itemId: 'tag_selector_box',
+                width: 200
             }
         ]
     },
@@ -172,7 +226,7 @@ Ext.define('Rally.technicalservices.TagDialog',{
                     scope: this,
                     userAction: 'clicked done in dialog',
                     handler: function() {
-                        this.fireEvent('tagselect', this, this._getConfig());
+                        this.fireEvent('tagselect', this, this._getTags());
                         this.close();
                     }
                 },
@@ -188,59 +242,13 @@ Ext.define('Rally.technicalservices.TagDialog',{
             ]
         });
     },
-    _getConfig: function() {
+    _getTags: function() {
         var me = this;
-        var config = {};
-        if ( this.down('#model_chooser') ) {
-            config.type = this.down('#model_chooser').getValue();
+        var tags = [];
+        if ( this.down('#tag_selector') ) {
+            tags = this.down('#tag_selector').getValue();
         }
-        var columns = [];
-        var fetch = [];
-            
-        if ( this.down('#column_chooser') ) {
-            var fields = this.down('#column_chooser').getValue();
-            Ext.Array.each(fields,function(field){
-                if ( Ext.Array.contains(me.multi_field_list,field.get('name') ) ) {
-                    columns.push({
-                        dataIndex:field.get('name'),
-                        text: field.get('displayName'),
-                        editor: {
-                            xtype:'tsmultipicker',
-                            autoExpand: true,
-                            field_name:field.get('name')
-                        }
-                    });
-                } else {
-                    columns.push({
-                        dataIndex:field.get('name'),
-                        text: field.get('displayName')
-                    }); 
-                }
-                fetch.push(field.get('name'));
-            });
-        }
-        if ( this.down('#multichoice_column_chooser') ) {
-            var fields = this.down('#multichoice_column_chooser').getValue();
-            Ext.Array.each(fields,function(field){
-                columns.push({
-                    dataIndex:field.get('name'),
-                    text: field.get('displayName'),
-                    editor: {
-                        xtype:'tsmultipicker',
-                        field_name:field.get('name')
-                    }
-                });
-                fetch.push(field.get('name'));
-            });
-        }
-
-        config.columns = columns;
-        config.fetch = fetch.join(',');
-            
-        if ( this.down('#query_chooser') ) {
-            config.query_string = this.down('#query_chooser').getValue();
-        }
-        return config;
+        return tags;
     },
     _addChoosers: function() {
         var me = this;
@@ -251,8 +259,11 @@ Ext.define('Rally.technicalservices.TagDialog',{
         var me = this;
 
         this.down('#tag_selector_box').add({
-             xtype: 'rallytagpicker',
-             autoExpand: true
+            itemId:'tag_selector',
+            xtype: 'rallytagpicker',
+            fieldLabel: 'Tags',
+            labelWidth: 35,
+            autoExpand: false
         });
     }
 });
