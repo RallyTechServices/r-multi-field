@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Sat Jan 18 2014 19:09:51 GMT-0800 (PST) -->
+    <!--  Build Date: Tue Mar 25 2014 20:13:42 GMT-0700 (PDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Sat Jan 18 2014 19:09:51 GMT-0800 (PST)";
-        var CHECKSUM = 40602020095;
+        var APP_BUILD_DATE = "Tue Mar 25 2014 20:13:42 GMT-0700 (PDT)";
+        var CHECKSUM = 44874421887;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -276,6 +276,10 @@ Ext.override(Rally.ui.picker.FieldPicker,{
             var fields = _.filter(model.getFields(), this._shouldShowField, this);
             var otherModels = _.difference(Ext.Object.getValues(models), [model]);
 
+            console.log(modelName);
+            if ( new RegExp(/PortfolioItem/).test(modelName) ) {
+                data['DerivedPredecessors'] = { displayName:'DerivedPredecessors',name:'DerivedPredecessors'};
+            }
             _.each(fields, function(field) {
                 var continue_flag = true;
                 if (typeof(this.ts_field_filter) == "function" ) {
@@ -301,6 +305,8 @@ Ext.override(Rally.ui.picker.FieldPicker,{
                 }
             }, this);
         }, this);
+        
+        console.log("data",data);
         return data;
     }
 });
@@ -524,8 +530,10 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
              */
             'cancelChosen'
         );
+
         this._buildButtons();
         this._addChoosers();
+
     },
     _buildButtons: function() {
         this.down('panel').addDocked({
@@ -563,8 +571,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     _getConfig: function() {
         var me = this;
         var config = {};
-        if ( this.down('#model_chooser') ) {
-            config.type = this.down('#model_chooser').getValue();
+        if ( this.down('#model_chooser') &&  this.down('#model_chooser').getRecord() ) {
+            config.type = this.down('#model_chooser').getRecord().get('TypePath');
         }
         var columns = [];
         var fetch = [];
@@ -583,10 +591,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                         }
                     });
                 } else {
-                    columns.push({
-                        dataIndex:field.get('name'),
-                        text: field.get('displayName')
-                    }); 
+                    columns.push(me._getColumnFromField(field)); 
                 }
                 fetch.push(field.get('name'));
             });
@@ -614,6 +619,14 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         }
         return config;
     },
+    _getColumnFromField: function(field){
+        var name = field.get('name');
+        var column_def = {
+            dataIndex:name,
+            text: field.get('displayName')
+        };
+        return column_def;
+    },
     _addChoosers: function() {
         var me = this;
         this._addModelChooser();
@@ -630,16 +643,24 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         this.down('#model_selector_box').add({
             xtype:'rallycombobox',
             itemId: 'model_chooser',
-            displayField: 'Name',
+            /*displayField: 'Name',
             valueField: 'Value',
-            store: type_store,
+            store: type_store,*/
+            storeConfig: {
+                autoLoad: true,
+                model:'TypeDefinition',
+                filters: [
+                  {property:'Creatable',value:true},
+                  {property:'Restorable',value:true}
+                ]
+            },
             fieldLabel: 'Artifact Type',
             labelWidth: 75,
             value: me.type,
             listeners: {
                 scope: this,
-                change: function(cb,new_value){
-                    this.type = new_value;
+                select: function(cb,new_value){
+                    this.type = cb.getRecord().get('TypePath');
                     this._addColumnChooser();
                     //this._addMultiChoiceColumnChooser();
                 }
@@ -798,7 +819,7 @@ Ext.define('CustomApp', {
     _getMulitFieldList: function() {
         var me = this;
         //var key = 'rally.techservices.fieldvalues.' + field_name;
-        var key = 'rally.techservices.fieldvalues.';
+        var key = 'rally.techservices.biggrid.fieldvalues.';
         this.multi_field_list = [];
         
         Rally.data.PreferenceManager.load({
@@ -831,6 +852,8 @@ Ext.define('CustomApp', {
         if ( this.down('rallygrid') ) {
             this.down('rallygrid').destroy();
         }
+        
+        this.logger.log("destroyed previous grid, if existing");
         
         this.down('#grid_box').add({
             xtype: 'rallygrid',
@@ -883,7 +906,9 @@ Ext.define('CustomApp', {
         });
     },
     
-    _loaded: function() { },
+    _loaded: function(store,records) { 
+        this.logger.log("Data Loaded",records);
+    },
 
     _getFilters: function() {
         var filters = [],
@@ -901,16 +926,62 @@ Ext.define('CustomApp', {
     },
 
     _getColumns: function(fetch){
+        var me = this;
+        var columns = [];
         if ( this.getSetting('columns') ) {
-            this.logger.log("Using column definitions",this.getSetting('columns'));
-            return this.getSetting('columns');
+            columns = this.getSetting('columns');
+        } else if (fetch) {
+            columns = Ext.Array.difference(fetch.split(','), this._getFetchOnlyFields());
         }
-        if (fetch) {
-            return Ext.Array.difference(fetch.split(','), this._getFetchOnlyFields());
-        }
-        return [];
+        
+        var xformed_columns = [];
+        Ext.Array.each(columns, function(column){
+            xformed_columns.push(me._setRenderer(column,me));
+        });
+        this.logger.log("Using column definitions",xformed_columns);
+        return xformed_columns;
     },
-
+    _setRenderer: function(column,scope){
+        var data_index = column.dataIndex;
+        
+        if ( data_index == 'DerivedPredecessors' ) {
+            column = { 
+                text: 'Derived Predecessors',
+                xtype: 'templatecolumn', 
+                tpl: '--'
+            };
+            column.renderer = function(value,metaData,record,row,col,store,view) {
+                var display_value = "";
+                var object_id = record.get('ObjectID');
+                var div_id = "DP"+ object_id;
+                
+                Ext.create('Rally.data.lookback.SnapshotStore',{
+                    autoLoad: true,
+                    filters: [
+                        {property:'__At',value:'current'},
+                        {property:'_ItemHierarchy',value:object_id},
+                        {property:'Predecessors',operator:'!=',value:null}
+                    ],
+                    listeners: {
+                        scope: scope,
+                        load: function(store,records){
+                            var count = records.length || 0;
+                            var containers = Ext.query('#'+div_id);
+                            if ( containers.length == 1 ){
+                                containers[0].innerHTML = count;
+                            }
+                        }
+                    }
+                });
+//                value = record.get('Predecessors');
+//                if ( typeof value.Count !== 'undefined' ) {
+//                    display_value = value.Count;
+//                }
+                return '<div id="' + div_id + '">loading</div>';
+            }
+        }
+        return column;
+    },
     _getPlugins: function(columns) {
         var plugins = [];
 
@@ -924,7 +995,6 @@ Ext.define('CustomApp', {
         if ( this.dialog ) { this.dialog.destroy(); }
         var config = this.config;
         
-        //this.showSettings();
         this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
             type: this.getSetting('type'),
             query_string: this.getSetting('query_string'),
@@ -971,29 +1041,6 @@ Ext.define('CustomApp', {
         }
         return null;
     }
-//        getSettingsFields: function() {
-//            var model_filters = [{property:'ElementName',value:'Defect'},
-//                {property:'ElementName',value:'HierarchicalRequirement'}];
-//            var store = Ext.create('Rally.data.wsapi.Store',{
-//                model:'TypeDefinition',
-//                filters: [Rally.data.wsapi.Filter.or(model_filters)],
-//                autoLoad: false
-//            });
-//            return [
-//                { 
-//                    name: 'type',
-//                    xtype: 'rallycombobox',
-//                    valueField: 'ElementName',
-//                    store: store,
-//                    /*storeConfig: {
-//                        model:'TypeDefinition',
-//                        filters: [Rally.data.wsapi.Filter.or(model_filters)],
-//                        autoLoad: false
-//                    },*/
-//                    readyEvent: 'ready' //event fired to signify readiness
-//                }
-//            ];
-//        }
 });
             
                Rally.launchApp('CustomApp', {

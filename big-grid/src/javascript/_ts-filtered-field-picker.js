@@ -7,6 +7,10 @@ Ext.override(Rally.ui.picker.FieldPicker,{
             var fields = _.filter(model.getFields(), this._shouldShowField, this);
             var otherModels = _.difference(Ext.Object.getValues(models), [model]);
 
+            console.log(modelName);
+            if ( new RegExp(/PortfolioItem/).test(modelName) ) {
+                data['DerivedPredecessors'] = { displayName:'DerivedPredecessors',name:'DerivedPredecessors'};
+            }
             _.each(fields, function(field) {
                 var continue_flag = true;
                 if (typeof(this.ts_field_filter) == "function" ) {
@@ -32,6 +36,8 @@ Ext.override(Rally.ui.picker.FieldPicker,{
                 }
             }, this);
         }, this);
+        
+        console.log("data",data);
         return data;
     }
 });

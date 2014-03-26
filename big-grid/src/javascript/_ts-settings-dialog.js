@@ -82,8 +82,10 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
              */
             'cancelChosen'
         );
+
         this._buildButtons();
         this._addChoosers();
+
     },
     _buildButtons: function() {
         this.down('panel').addDocked({
@@ -121,8 +123,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     _getConfig: function() {
         var me = this;
         var config = {};
-        if ( this.down('#model_chooser') ) {
-            config.type = this.down('#model_chooser').getValue();
+        if ( this.down('#model_chooser') &&  this.down('#model_chooser').getRecord() ) {
+            config.type = this.down('#model_chooser').getRecord().get('TypePath');
         }
         var columns = [];
         var fetch = [];
@@ -141,10 +143,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                         }
                     });
                 } else {
-                    columns.push({
-                        dataIndex:field.get('name'),
-                        text: field.get('displayName')
-                    }); 
+                    columns.push(me._getColumnFromField(field)); 
                 }
                 fetch.push(field.get('name'));
             });
@@ -172,6 +171,14 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         }
         return config;
     },
+    _getColumnFromField: function(field){
+        var name = field.get('name');
+        var column_def = {
+            dataIndex:name,
+            text: field.get('displayName')
+        };
+        return column_def;
+    },
     _addChoosers: function() {
         var me = this;
         this._addModelChooser();
@@ -188,16 +195,24 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         this.down('#model_selector_box').add({
             xtype:'rallycombobox',
             itemId: 'model_chooser',
-            displayField: 'Name',
+            /*displayField: 'Name',
             valueField: 'Value',
-            store: type_store,
+            store: type_store,*/
+            storeConfig: {
+                autoLoad: true,
+                model:'TypeDefinition',
+                filters: [
+                  {property:'Creatable',value:true},
+                  {property:'Restorable',value:true}
+                ]
+            },
             fieldLabel: 'Artifact Type',
             labelWidth: 75,
             value: me.type,
             listeners: {
                 scope: this,
-                change: function(cb,new_value){
-                    this.type = new_value;
+                select: function(cb,new_value){
+                    this.type = cb.getRecord().get('TypePath');
                     this._addColumnChooser();
                     //this._addMultiChoiceColumnChooser();
                 }

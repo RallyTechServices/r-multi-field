@@ -57,7 +57,7 @@ Ext.define('CustomApp', {
     _getMulitFieldList: function() {
         var me = this;
         //var key = 'rally.techservices.fieldvalues.' + field_name;
-        var key = 'rally.techservices.fieldvalues.';
+        var key = 'rally.techservices.biggrid.fieldvalues.';
         this.multi_field_list = [];
         
         Rally.data.PreferenceManager.load({
@@ -90,6 +90,8 @@ Ext.define('CustomApp', {
         if ( this.down('rallygrid') ) {
             this.down('rallygrid').destroy();
         }
+        
+        this.logger.log("destroyed previous grid, if existing");
         
         this.down('#grid_box').add({
             xtype: 'rallygrid',
@@ -142,7 +144,9 @@ Ext.define('CustomApp', {
         });
     },
     
-    _loaded: function() { },
+    _loaded: function(store,records) { 
+        this.logger.log("Data Loaded",records);
+    },
 
     _getFilters: function() {
         var filters = [],
@@ -160,16 +164,62 @@ Ext.define('CustomApp', {
     },
 
     _getColumns: function(fetch){
+        var me = this;
+        var columns = [];
         if ( this.getSetting('columns') ) {
-            this.logger.log("Using column definitions",this.getSetting('columns'));
-            return this.getSetting('columns');
+            columns = this.getSetting('columns');
+        } else if (fetch) {
+            columns = Ext.Array.difference(fetch.split(','), this._getFetchOnlyFields());
         }
-        if (fetch) {
-            return Ext.Array.difference(fetch.split(','), this._getFetchOnlyFields());
-        }
-        return [];
+        
+        var xformed_columns = [];
+        Ext.Array.each(columns, function(column){
+            xformed_columns.push(me._setRenderer(column,me));
+        });
+        this.logger.log("Using column definitions",xformed_columns);
+        return xformed_columns;
     },
-
+    _setRenderer: function(column,scope){
+        var data_index = column.dataIndex;
+        
+        if ( data_index == 'DerivedPredecessors' ) {
+            column = { 
+                text: 'Derived Predecessors',
+                xtype: 'templatecolumn', 
+                tpl: '--'
+            };
+            column.renderer = function(value,metaData,record,row,col,store,view) {
+                var display_value = "";
+                var object_id = record.get('ObjectID');
+                var div_id = "DP"+ object_id;
+                
+                Ext.create('Rally.data.lookback.SnapshotStore',{
+                    autoLoad: true,
+                    filters: [
+                        {property:'__At',value:'current'},
+                        {property:'_ItemHierarchy',value:object_id},
+                        {property:'Predecessors',operator:'!=',value:null}
+                    ],
+                    listeners: {
+                        scope: scope,
+                        load: function(store,records){
+                            var count = records.length || 0;
+                            var containers = Ext.query('#'+div_id);
+                            if ( containers.length == 1 ){
+                                containers[0].innerHTML = count;
+                            }
+                        }
+                    }
+                });
+//                value = record.get('Predecessors');
+//                if ( typeof value.Count !== 'undefined' ) {
+//                    display_value = value.Count;
+//                }
+                return '<div id="' + div_id + '">loading</div>';
+            }
+        }
+        return column;
+    },
     _getPlugins: function(columns) {
         var plugins = [];
 
@@ -183,7 +233,6 @@ Ext.define('CustomApp', {
         if ( this.dialog ) { this.dialog.destroy(); }
         var config = this.config;
         
-        //this.showSettings();
         this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
             type: this.getSetting('type'),
             query_string: this.getSetting('query_string'),
@@ -230,27 +279,4 @@ Ext.define('CustomApp', {
         }
         return null;
     }
-//        getSettingsFields: function() {
-//            var model_filters = [{property:'ElementName',value:'Defect'},
-//                {property:'ElementName',value:'HierarchicalRequirement'}];
-//            var store = Ext.create('Rally.data.wsapi.Store',{
-//                model:'TypeDefinition',
-//                filters: [Rally.data.wsapi.Filter.or(model_filters)],
-//                autoLoad: false
-//            });
-//            return [
-//                { 
-//                    name: 'type',
-//                    xtype: 'rallycombobox',
-//                    valueField: 'ElementName',
-//                    store: store,
-//                    /*storeConfig: {
-//                        model:'TypeDefinition',
-//                        filters: [Rally.data.wsapi.Filter.or(model_filters)],
-//                        autoLoad: false
-//                    },*/
-//                    readyEvent: 'ready' //event fired to signify readiness
-//                }
-//            ];
-//        }
 });
