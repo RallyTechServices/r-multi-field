@@ -1,4 +1,5 @@
 (function() {
+    
     var Ext = window.Ext4 || window.Ext;
 
     Ext.define('Rally.ui.menu.bulk.Tag', {
