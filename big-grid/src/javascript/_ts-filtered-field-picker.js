@@ -64,4 +64,7 @@ Ext.override(Rally.ui.picker.FieldPicker,{
 		        this.groupRecords(this.getValue());
 		    }
 		}
+    
+
+     
 });
