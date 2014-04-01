@@ -243,6 +243,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         var cb = this.down('#column_selector_box').add({
             alwaysExpanded: true,
             xtype: 'rallyfieldpicker',
+            id: 'big_grid_field_picker',
             autoExpand: true,
             multi_field_list: this.multi_field_list,
             modelTypes: [me.type],
@@ -250,20 +251,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             labelWidth: 75,
             fieldLabel: 'Columns',
             ts_field_filter: this._filterOutTextFields,
-            value:this.fetch_list,
-            listeners:{
-            	scope: this,
-            	afterrender: function(fp)
-            	{
-            		if (this.fetch_list.search('DerivedPredecessors') != -1)
-            			{
-            				this.logger.log('fp.contains DerivedPredecessors', fp);
-            				//This is where we might select the Derived Predecessors checkbox
-            				fp.value=this.fetch_list;
-            			};
-            	}
-
-            }
+            value:this.fetch_list
         });
     },
     _addMultiChoiceColumnChooser: function() {
