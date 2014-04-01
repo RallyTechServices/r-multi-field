@@ -243,7 +243,8 @@ Ext.define('CustomApp', {
                             
                             if ( containers.length == 1 ){
                         		containers[0].innerHTML = this._getDerivedPredecessorsContent(records); //count;
-                        		//Need to re-draw the grid here to accomodate the scrolling after the records have been updated
+                        		//Need to re-draw the grid here because the original content likely required less space than the new content so content may be cutoff
+                        		this.down('rallygrid').doLayout();
                         		
                             }
                         }
