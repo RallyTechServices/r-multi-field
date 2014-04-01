@@ -75,9 +75,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     logger: new Rally.technicalservices.Logger(),
     
     constructor: function(config){
-    	this.logger.log ('config before merge',config);
         this.mergeConfig(config);
-        this.logger.log('config after merge', config);
         this.callParent([this.config]);
     },
     initComponent: function() {
@@ -252,7 +250,20 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             labelWidth: 75,
             fieldLabel: 'Columns',
             ts_field_filter: this._filterOutTextFields,
-            value:this.fetch_list
+            value:this.fetch_list,
+            listeners:{
+            	scope: this,
+            	afterrender: function(fp)
+            	{
+            		if (this.fetch_list.search('DerivedPredecessors') != -1)
+            			{
+            				this.logger.log('fp.contains DerivedPredecessors', fp);
+            				//This is where we might select the Derived Predecessors checkbox
+            				fp.value=this.fetch_list;
+            			};
+            	}
+
+            }
         });
     },
     _addMultiChoiceColumnChooser: function() {
