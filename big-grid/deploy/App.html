@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Fri Mar 28 2014 16:43:05 GMT-0700 (PDT) -->
+    <!--  Build Date: Mon Mar 31 2014 09:54:56 GMT-0600 (MDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Fri Mar 28 2014 16:43:05 GMT-0700 (PDT)";
-        var CHECKSUM = 44886726910;
+        var APP_BUILD_DATE = "Mon Mar 31 2014 09:54:56 GMT-0600 (MDT)";
+        var CHECKSUM = 45053046931;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -969,7 +969,8 @@ Ext.define('CustomApp', {
                             var count = records.length || 0;
                             var containers = Ext.query('#'+div_id);
                             if ( containers.length == 1 ){
-                                containers[0].innerHTML = count;
+                                scope.logger.log ('record count', count);
+                            	containers[0].innerHTML = count;
                             }
                         }
                     }

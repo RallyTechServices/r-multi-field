@@ -6,7 +6,9 @@ Ext.define('CustomApp', {
         'Rally.data.wsapi.Filter',
         'Rally.ui.grid.Grid',
         'Rally.data.ModelFactory',
-        'Rally.ui.grid.plugin.PercentDonePopoverPlugin'
+        'Rally.ui.grid.plugin.PercentDonePopoverPlugin',
+        'Rally.nav.Message',//Needed for the Rally.nav.Manager
+        'Rally.util.Ref'  //Needed for the Rally.nav.Manager
     ],
 
     items: [
@@ -24,7 +26,7 @@ Ext.define('CustomApp', {
 
     launch: function() {
         var me = this;
-        
+
         Rally.data.PreferenceManager.load({
             appID: this.getAppId(),
             filterByUser: true,
@@ -83,18 +85,21 @@ Ext.define('CustomApp', {
         var me = this;
         this.logger.log("_makeAndDisplayGrid",this.config);
         var context = this.getContext(),
-            pageSize = this.getSetting('pageSize'),
+            pageSize = Number(this.getSetting('pageSize')),
             fetch = this.getSetting('fetch'),
             columns = this._getColumns(fetch);
 
-        if ( this.down('rallygrid') ) {
+        if ( this.down('rallygrid') ) {  
+            this.logger.log("_makeAndDisplayGrid: destroying previous grid");        	
             this.down('rallygrid').destroy();
         }
-        
-        this.logger.log("destroyed previous grid, if existing");
+
+        var pageSizeOptions = this._setPageSizeOptions(pageSize);
+        this.logger.log("pageSizes", pageSizeOptions);
         
         this.down('#grid_box').add({
             xtype: 'rallygrid',
+            id: 'biggrid',
             columnCfgs: columns,
             enableColumnHide: false,
             enableRanking: false,
@@ -113,10 +118,11 @@ Ext.define('CustomApp', {
                 }
             },
             pagingToolbarCfg: {
-                stateful: true,
+                scope: me,
+            	stateful: true,
                 stateId: 'rally-techservices-biggrid-toolbar',
                 stateEvents: ['change'],
-                pageSizes: [pageSize, 50, 100, 200, 1000],
+                pageSizes: pageSizeOptions,
                 listeners: {
                     change: function(toolbar,pageData) {
                         me.logger.log('change',pageData);
@@ -124,17 +130,34 @@ Ext.define('CustomApp', {
                     statesave: function(toolbar,state){
                         me.logger.log('statesave',state);
                     },
+                    
+                    
                     staterestore: function(toolbar,state){
                         me.logger.log('staterestore',state);
                         var store = this.getStore();
                         if ( store ) {
-                            if ( state && state.currentPage ) {
+                        	if ( state && state.currentPage ) {
+                        		me.logger.log('staterestore', state.currentPage);
                                 store.currentPage = state.currentPage;
                             }
                             if ( state && state.pageSize ) {
                                 store.pageSize = state.pageSize;
                             }
                         }
+                    },
+                    
+                    //Use the beforestaterestore function to set the pagesizes so that they don't 
+                    //get overwritten when the staterestore event fires
+                    beforestaterestore: function(toolbar, state)
+                    {
+                    	
+                    	var localPageSize = Number(me.getSetting('pageSize'));
+                    	if (localPageSize != state.pageSize)
+                    		{
+                    			state.pageSizes = this.pageSizes;
+                    			state.pageSize = pageSize;
+                    			state.currentPage = 1; 
+                    		};
                     }
                 },
                 getState: function() {
@@ -144,8 +167,17 @@ Ext.define('CustomApp', {
         });
     },
     
+    //Determines the default page size options based on the default page size
+    _setPageSizeOptions: function (defaultPageSize)
+    {
+    	var pageSizes = [defaultPageSize,defaultPageSize*2,defaultPageSize*4,defaultPageSize*8,defaultPageSize*20];
+    	return pageSizes;
+    },
+    
+    
     _loaded: function(store,records) { 
         this.logger.log("Data Loaded",records);
+
     },
 
     _getFilters: function() {
@@ -176,6 +208,7 @@ Ext.define('CustomApp', {
         Ext.Array.each(columns, function(column){
             xformed_columns.push(me._setRenderer(column,me));
         });
+        
         this.logger.log("Using column definitions",xformed_columns);
         return xformed_columns;
     },
@@ -195,6 +228,7 @@ Ext.define('CustomApp', {
                 
                 Ext.create('Rally.data.lookback.SnapshotStore',{
                     autoLoad: true,
+                    fetch: ['Name','FormattedID'], //KC
                     filters: [
                         {property:'__At',value:'current'},
                         {property:'_ItemHierarchy',value:object_id},
@@ -205,8 +239,13 @@ Ext.define('CustomApp', {
                         load: function(store,records){
                             var count = records.length || 0;
                             var containers = Ext.query('#'+div_id);
+                            
+                            
                             if ( containers.length == 1 ){
-                                containers[0].innerHTML = count;
+                        		containers[0].innerHTML = this._getDerivedPredecessorsContent(records); //count;
+                        		//Need to re-draw the grid here because the original content likely required less space than the new content so content may be cutoff
+                        		this.down('rallygrid').doLayout();
+                        		
                             }
                         }
                     }
@@ -220,6 +259,25 @@ Ext.define('CustomApp', {
         }
         return column;
     },
+    
+    //Update what is populated in the custom Grid
+    _getDerivedPredecessorsContent: function(records)
+    {
+    	var story_names = '';
+    	if (records.length > 0){
+    		for (var i=0;i < records.length; i++)
+    			{
+    			//Need to determine a way to get the detail url
+    			//var url =  Rally.nav.Manager.getDetailUrl(records[i].ObjectID);
+    			//this.logger.log ('record url ' + i,records[i]);	
+    			//story_names += '<a href="'+ url + '">' + records[i].get('FormattedID')   + '</a> : ' + records[i].get('Name') +  '<br>';
+    			story_names +=  records[i].get('FormattedID')   + ': ' + records[i].get('Name') +  '<br>';
+    	
+    			};
+    	}
+    	return story_names; 
+    
+    },
     _getPlugins: function(columns) {
         var plugins = [];
 
@@ -230,20 +288,24 @@ Ext.define('CustomApp', {
         return plugins;
     },
     _showSettingsDialog: function() {
-        if ( this.dialog ) { this.dialog.destroy(); }
+        if ( this.dialog ) { this.dialog.destroy(); } 
         var config = this.config;
-        
         this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
             type: this.getSetting('type'),
             query_string: this.getSetting('query_string'),
             multi_field_list: this.multi_field_list,
             fetch_list: this.getSetting('fetch'),
+            pageSize: this.getSetting('pageSize'),
             listeners: {
                 settingsChosen: function(dialog,returned_config) {
                     var me = this;
                     this.config = Ext.Object.merge(config,returned_config);
-                    this._saveConfig(this.config);
-                    this._makeAndDisplayGrid();
+                    this.logger.log("returned_config", returned_config);
+                    this._saveConfig(this.config).then(
+                    {
+                    	scope:this, 
+                    	success: this._makeAndDisplayGrid
+                    });
                 },
                 scope: this
             }
@@ -257,6 +319,8 @@ Ext.define('CustomApp', {
         delete config["context"];
         delete config["settings"];
         
+        me.logger.log('pageSize',config.pageSize);
+        var deferred = Ext.create('Deft.Deferred');
         Rally.data.PreferenceManager.update({
             appID: this.getAppId(),
             filterByUser: true,
@@ -265,8 +329,10 @@ Ext.define('CustomApp', {
             },
             success: function() {
                 me.logger.log("Saved settings",config);
+                deferred.resolve();
             }
         });
+        return deferred.promise;
     },
     // override until we figure out problem with getSettingsFields
     getSetting: function(field){
