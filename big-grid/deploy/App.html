@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Tue Apr 01 2014 15:24:07 GMT-0600 (MDT) -->
+    <!--  Build Date: Tue Apr 01 2014 15:57:25 GMT-0600 (MDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Tue Apr 01 2014 15:24:07 GMT-0600 (MDT)";
-        var CHECKSUM = 57204323056;
+        var APP_BUILD_DATE = "Tue Apr 01 2014 15:57:25 GMT-0600 (MDT)";
+        var CHECKSUM = 57504258687;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -334,6 +334,9 @@ Ext.override(Rally.ui.picker.FieldPicker,{
 		        this.groupRecords(this.getValue());
 		    }
 		}
+    
+
+     
 });
 /**
  * A link that pops up a version dialog box
@@ -1090,7 +1093,7 @@ Ext.define('CustomApp', {
     			//this.logger.log ('record url ' + i,records[i]);	
     			//story_names += '<a href="'+ url + '">' + records[i].get('FormattedID')   + '</a> : ' + records[i].get('Name') +  '<br>';
     			story_names +=  records[i].get('FormattedID')   + ': ' + records[i].get('Name') +  '<br>';
-    	
+    	        this.logger.log ('recordassociations', records[i].getAssociatedData);
     			};
     	}
     	return story_names; 
