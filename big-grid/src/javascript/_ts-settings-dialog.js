@@ -33,7 +33,13 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
           * 
           * [@String] 
           */
-         fetch_list: []
+         fetch_list: [], 
+         /**
+          * 
+          * pageSize
+          * 
+          */
+         pageSize: 16
     },
     items: {
         xtype: 'panel',
@@ -59,9 +65,15 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             {
                 xtype:'container',
                 itemId:'query_selector_box'
+            },
+            {
+            	xtype:'container',
+            	itemId: 'page_size_selector_box'
             }
         ]
     },
+    logger: new Rally.technicalservices.Logger(),
+    
     constructor: function(config){
         this.mergeConfig(config);
         this.callParent([this.config]);
@@ -169,6 +181,9 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         if ( this.down('#query_chooser') ) {
             config.query_string = this.down('#query_chooser').getValue();
         }
+       
+        config.pageSize = this.down('#page_size_chooser').getValue();
+        me.logger.log('ts-settings-dialog._getConfig', me.pageSize);
         return config;
     },
     _getColumnFromField: function(field){
@@ -185,6 +200,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         this._addColumnChooser();
         //this._addMultiChoiceColumnChooser();
         this._addQueryChooser();
+        this._addPageSizeChooser();
         
     },
     _addModelChooser: function() {
@@ -192,6 +208,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         var type_store = Ext.create('Rally.data.custom.Store',{
             data: me.artifact_types
         });
+        me.logger.log('_addModelChooser:type', me.type);
         this.down('#model_selector_box').add({
             xtype:'rallycombobox',
             itemId: 'model_chooser',
@@ -208,6 +225,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             },
             fieldLabel: 'Artifact Type',
             labelWidth: 75,
+            valueField:'TypePath',
             value: me.type,
             listeners: {
                 scope: this,
@@ -257,8 +275,20 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             itemId:'query_chooser',
             labelAlign: 'top',
             fieldLabel:'Limit to items that currently meet this query filter',
-            value: me.query_string
+            value: me.query_string 
         });
+    },
+    _addPageSizeChooser: function(){
+    	var me = this;
+        this.down('#page_size_selector_box').add({
+                xtype:'numberfield',
+                itemId:'page_size_chooser',
+                labelAlign: 'top',
+                fieldLabel:'Default Page Size',
+                value: me.pageSize,
+                min: 1,
+                max: 1000
+            });
     },
     _dateValidator: function(value) {
         return true;
