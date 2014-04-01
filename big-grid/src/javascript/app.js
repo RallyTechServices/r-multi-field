@@ -91,14 +91,10 @@ Ext.define('CustomApp', {
             fetch = this.getSetting('fetch'),
             columns = this._getColumns(fetch);
 
-        if ( this.down('rallygrid') ) {    	
-        	alert ("destory!");
-        	this.logger.log ("items", this.down('#grid_box').items);
+        if ( this.down('rallygrid') ) {  
+            this.logger.log("_makeAndDisplayGrid: destroying previous grid");        	
             this.down('rallygrid').destroy();
-            this.logger.log ("items AFTER", this.down('#grid_box').items);
         }
-        
-        this.logger.log("destroyed previous grid, if existing");
 
         var pageSizeOptions = this._setPageSizeOptions(pageSize);
         this.logger.log("pageSizes", pageSizeOptions);
@@ -124,7 +120,8 @@ Ext.define('CustomApp', {
                 }
             },
             pagingToolbarCfg: {
-                stateful: true,
+                scope: me,
+            	stateful: true,
                 stateId: 'rally-techservices-biggrid-toolbar',
                 stateEvents: ['change'],
                 pageSizes: pageSizeOptions,
@@ -135,6 +132,7 @@ Ext.define('CustomApp', {
                     statesave: function(toolbar,state){
                         me.logger.log('statesave',state);
                     },
+  //Use the beforestaterestore function to set the pagesizes                     
                     staterestore: function(toolbar,state){
                         me.logger.log('staterestore',state);
                         var store = this.getStore();
@@ -143,13 +141,31 @@ Ext.define('CustomApp', {
                         	me.logger.log('state.currentPage',state.CurrentPage);
                         	me.logger.log('state.pageSize',state.pageSize);
                         	if ( state && state.currentPage ) {
-
+                        		me.logger.log('staterestore', state.currentPage);
                                 store.currentPage = state.currentPage;
                             }
-//                            if ( state && state.pageSize ) {
-//                                store.pageSize = state.pageSize;
-//                            }
+                            if ( state && state.pageSize ) {
+                                store.pageSize = state.pageSize;
+                            }
                         }
+                    },
+                    beforestaterestore: function(toolbar, state)
+                    {
+                    	
+                    	var localPageSize = Number(me.getSetting('pageSize'));
+                    	me.logger.log('pageSize', localPageSize);
+                    	me.logger.log('state.pageSizes', state.pageSize);
+                    	me.logger.log('compare', this.pageSize != state.pageSize);
+                    
+                    	if (localPageSize != state.pageSize)
+                    		{
+                    			state.pageSizes = this.pageSizes;
+                    			state.pageSize = pageSize;
+                    			state.currentPage = 1; 
+                    		}
+                    	me.logger.log('pageSizeOptions', this.pageSizes);
+                    	me.logger.log('state.pageSizes', state.pageSizes);
+                    	//return false;
                     }
                 },
                 getState: function() {
@@ -162,7 +178,7 @@ Ext.define('CustomApp', {
     //Determines the default page size options based on the default page size
     _setPageSizeOptions: function (defaultPageSize)
     {
-    	var pageSizes = [defaultPageSize,51,101,201];
+    	var pageSizes = [defaultPageSize,defaultPageSize*2,defaultPageSize*4,defaultPageSize*8];
     	return pageSizes;
     },
     
