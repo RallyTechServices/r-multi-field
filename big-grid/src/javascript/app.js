@@ -26,9 +26,7 @@ Ext.define('CustomApp', {
 
     launch: function() {
         var me = this;
-        //DEBUGGING
-        me.logger.log ('Project',this.getContext().getProject().Name);
-        //END DEBUGGING
+
         Rally.data.PreferenceManager.load({
             appID: this.getAppId(),
             filterByUser: true,
@@ -132,14 +130,12 @@ Ext.define('CustomApp', {
                     statesave: function(toolbar,state){
                         me.logger.log('statesave',state);
                     },
-  //Use the beforestaterestore function to set the pagesizes                     
+                    
+                    
                     staterestore: function(toolbar,state){
                         me.logger.log('staterestore',state);
                         var store = this.getStore();
                         if ( store ) {
-                        	me.logger.log('state',state);
-                        	me.logger.log('state.currentPage',state.CurrentPage);
-                        	me.logger.log('state.pageSize',state.pageSize);
                         	if ( state && state.currentPage ) {
                         		me.logger.log('staterestore', state.currentPage);
                                 store.currentPage = state.currentPage;
@@ -149,23 +145,19 @@ Ext.define('CustomApp', {
                             }
                         }
                     },
+                    
+                    //Use the beforestaterestore function to set the pagesizes so that they don't 
+                    //get overwritten when the staterestore event fires
                     beforestaterestore: function(toolbar, state)
                     {
                     	
                     	var localPageSize = Number(me.getSetting('pageSize'));
-                    	me.logger.log('pageSize', localPageSize);
-                    	me.logger.log('state.pageSizes', state.pageSize);
-                    	me.logger.log('compare', this.pageSize != state.pageSize);
-                    
                     	if (localPageSize != state.pageSize)
                     		{
                     			state.pageSizes = this.pageSizes;
                     			state.pageSize = pageSize;
                     			state.currentPage = 1; 
-                    		}
-                    	me.logger.log('pageSizeOptions', this.pageSizes);
-                    	me.logger.log('state.pageSizes', state.pageSizes);
-                    	//return false;
+                    		};
                     }
                 },
                 getState: function() {
@@ -178,13 +170,14 @@ Ext.define('CustomApp', {
     //Determines the default page size options based on the default page size
     _setPageSizeOptions: function (defaultPageSize)
     {
-    	var pageSizes = [defaultPageSize,defaultPageSize*2,defaultPageSize*4,defaultPageSize*8];
+    	var pageSizes = [defaultPageSize,defaultPageSize*2,defaultPageSize*4,defaultPageSize*8,defaultPageSize*20];
     	return pageSizes;
     },
     
     
     _loaded: function(store,records) { 
         this.logger.log("Data Loaded",records);
+
     },
 
     _getFilters: function() {
@@ -215,6 +208,7 @@ Ext.define('CustomApp', {
         Ext.Array.each(columns, function(column){
             xformed_columns.push(me._setRenderer(column,me));
         });
+        
         this.logger.log("Using column definitions",xformed_columns);
         return xformed_columns;
     },
@@ -249,6 +243,8 @@ Ext.define('CustomApp', {
                             
                             if ( containers.length == 1 ){
                         		containers[0].innerHTML = this._getDerivedPredecessorsContent(records); //count;
+                        		//Need to re-draw the grid here to accomodate the scrolling after the records have been updated
+                        		
                             }
                         }
                     }
@@ -270,9 +266,9 @@ Ext.define('CustomApp', {
     	if (records.length > 0){
     		for (var i=0;i < records.length; i++)
     			{
-    			//URL:  <server>/#/<Project ID?>/detail/<TypePath>/<ObjectID> 
-    			var url = Rally.nav.Manager.getDetailUrl(records[i]);
-    			this.logger.log ('record url ' + i,url);	
+    			//Need to determine a way to get the detail url
+    			//var url =  Rally.nav.Manager.getDetailUrl(records[i].ObjectID);
+    			//this.logger.log ('record url ' + i,records[i]);	
     			//story_names += '<a href="'+ url + '">' + records[i].get('FormattedID')   + '</a> : ' + records[i].get('Name') +  '<br>';
     			story_names +=  records[i].get('FormattedID')   + ': ' + records[i].get('Name') +  '<br>';
     	
@@ -291,13 +287,14 @@ Ext.define('CustomApp', {
         return plugins;
     },
     _showSettingsDialog: function() {
-        if ( this.dialog ) { this.dialog.destroy(); }
+        if ( this.dialog ) { this.dialog.destroy(); } 
         var config = this.config;
         this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
             type: this.getSetting('type'),
             query_string: this.getSetting('query_string'),
             multi_field_list: this.multi_field_list,
             fetch_list: this.getSetting('fetch'),
+            pageSize: this.getSetting('pageSize'),
             listeners: {
                 settingsChosen: function(dialog,returned_config) {
                     var me = this;

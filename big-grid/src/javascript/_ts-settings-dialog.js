@@ -39,7 +39,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
           * pageSize
           * 
           */
-         pageSize: 16
+          pageSize: 16
     },
     items: {
         xtype: 'panel',
@@ -75,7 +75,9 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     logger: new Rally.technicalservices.Logger(),
     
     constructor: function(config){
+    	this.logger.log ('config before merge',config);
         this.mergeConfig(config);
+        this.logger.log('config after merge', config);
         this.callParent([this.config]);
     },
     initComponent: function() {
