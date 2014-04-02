@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Tue Apr 01 2014 15:57:25 GMT-0600 (MDT) -->
+    <!--  Build Date: Tue Apr 01 2014 18:33:54 GMT-0700 (PDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Tue Apr 01 2014 15:57:25 GMT-0600 (MDT)";
-        var CHECKSUM = 57504258687;
+        var APP_BUILD_DATE = "Tue Apr 01 2014 18:33:54 GMT-0700 (PDT)";
+        var CHECKSUM = 56673143290;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -42,7 +42,6 @@
 
             prepareRecords: function(records, selectedTags) {
                 var successfulRecords = [];
-                console.log("tags",selectedTags);
                 _.each(records, function(record) {
                     record.beginEdit();
                     var partialTagRefs = _.invoke(selectedTags.partial, 'get', '_ref'),
@@ -56,11 +55,9 @@
                     var newTagArray = _.map(newTagRefs, function(ref) { return {_ref: ref}; });
 
                     if (_.isEqual(existingTagRefs, newTagRefs)) {
-                        console.log('isequal',existingTagRefs,newTagRefs);
                         successfulRecords.push(record);
                         record.cancelEdit();
                     } else {
-                        console.log('setting record');
                         record.set('Tags', newTagArray);
                     }
                 });
@@ -76,7 +73,6 @@
         saveRecords: function(records, args) {
             var me = this,
                 successfulRecords = this.prepareRecords(records, args);
-console.log('saveRecords',successfulRecords);
 
             if (successfulRecords.length === records.length) {
                 me.onSuccess(successfulRecords, [], args);
@@ -163,6 +159,7 @@ console.log('saveRecords',successfulRecords);
         }
     });
 })();
+
 Ext.define('Rally.technicalservices.TagDialog',{
     extend: 'Rally.ui.dialog.Dialog',
     alias: 'widget.tstagdialog',
@@ -277,7 +274,6 @@ Ext.override(Rally.ui.picker.FieldPicker,{
             var fields = _.filter(model.getFields(), this._shouldShowField, this);
             var otherModels = _.difference(Ext.Object.getValues(models), [model]);
 
-            console.log(modelName);
             if ( new RegExp(/PortfolioItem/).test(modelName) ) {
                 data['DerivedPredecessors'] = { displayName:'DerivedPredecessors',name:'DerivedPredecessors'};
             }
@@ -307,7 +303,6 @@ Ext.override(Rally.ui.picker.FieldPicker,{
             }, this);
         }, this);
         
-        console.log("data",data);
         return data;
     },
 
@@ -338,6 +333,7 @@ Ext.override(Rally.ui.picker.FieldPicker,{
 
      
 });
+
 /**
  * A link that pops up a version dialog box
  */
@@ -727,20 +723,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             labelWidth: 75,
             fieldLabel: 'Columns',
             ts_field_filter: this._filterOutTextFields,
-            value:this.fetch_list,
-            listeners:{
-            	scope: this,
-            	afterrender: function(fp)
-            	{
-            		if (this.fetch_list.search('DerivedPredecessors') != -1)
-            			{
-            				this.logger.log('fp.contains DerivedPredecessors', fp);
-            				//This is where we might select the Derived Predecessors checkbox
-            				fp.value=this.fetch_list;
-            			};
-            	}
-
-            }
+            value:this.fetch_list
         });
     },
     _addMultiChoiceColumnChooser: function() {
@@ -1106,6 +1089,7 @@ Ext.define('CustomApp', {
     			//this.logger.log ('record url ' + i,records[i]);	
     			//story_names += '<a href="'+ url + '">' + records[i].get('FormattedID')   + '</a> : ' + records[i].get('Name') +  '<br>';
     			story_names +=  records[i].get('FormattedID')   + ': ' + records[i].get('Name') +  '<br>';
+    	        this.logger.log ('recordassociations', records[i].getAssociatedData);
     			};
     	}
     	return story_names; 

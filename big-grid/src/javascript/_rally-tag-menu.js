@@ -25,7 +25,6 @@
 
             prepareRecords: function(records, selectedTags) {
                 var successfulRecords = [];
-                console.log("tags",selectedTags);
                 _.each(records, function(record) {
                     record.beginEdit();
                     var partialTagRefs = _.invoke(selectedTags.partial, 'get', '_ref'),
@@ -39,11 +38,9 @@
                     var newTagArray = _.map(newTagRefs, function(ref) { return {_ref: ref}; });
 
                     if (_.isEqual(existingTagRefs, newTagRefs)) {
-                        console.log('isequal',existingTagRefs,newTagRefs);
                         successfulRecords.push(record);
                         record.cancelEdit();
                     } else {
-                        console.log('setting record');
                         record.set('Tags', newTagArray);
                     }
                 });
@@ -59,7 +56,6 @@
         saveRecords: function(records, args) {
             var me = this,
                 successfulRecords = this.prepareRecords(records, args);
-console.log('saveRecords',successfulRecords);
 
             if (successfulRecords.length === records.length) {
                 me.onSuccess(successfulRecords, [], args);

@@ -7,7 +7,6 @@ Ext.override(Rally.ui.picker.FieldPicker,{
             var fields = _.filter(model.getFields(), this._shouldShowField, this);
             var otherModels = _.difference(Ext.Object.getValues(models), [model]);
 
-            console.log(modelName);
             if ( new RegExp(/PortfolioItem/).test(modelName) ) {
                 data['DerivedPredecessors'] = { displayName:'DerivedPredecessors',name:'DerivedPredecessors'};
             }
@@ -37,7 +36,6 @@ Ext.override(Rally.ui.picker.FieldPicker,{
             }, this);
         }, this);
         
-        console.log("data",data);
         return data;
     },
 
