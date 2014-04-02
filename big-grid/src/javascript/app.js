@@ -272,7 +272,7 @@ Ext.define('CustomApp', {
     			//this.logger.log ('record url ' + i,records[i]);	
     			//story_names += '<a href="'+ url + '">' + records[i].get('FormattedID')   + '</a> : ' + records[i].get('Name') +  '<br>';
     			story_names +=  records[i].get('FormattedID')   + ': ' + records[i].get('Name') +  '<br>';
-    	
+    	        this.logger.log ('recordassociations', records[i].getAssociatedData);
     			};
     	}
     	return story_names; 

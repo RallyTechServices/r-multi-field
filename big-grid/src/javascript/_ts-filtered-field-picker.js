@@ -39,5 +39,32 @@ Ext.override(Rally.ui.picker.FieldPicker,{
         
         console.log("data",data);
         return data;
-    }
+    },
+
+		setValue: function (values) {
+			
+			this.selectedValues.clear();
+		
+		    if (Ext.isArray(values)) {
+		        Ext.each(values, function (value) {
+		            this.selectedValues.add(value.get(this.selectionKey), value);
+		        }, this);
+		    } else {
+		        var items = Ext.Array.merge((values || '').split(','), this.alwaysSelectedValues);
+		        Ext.each(items, function (key) {
+		            var value = this.store && this.store.findRecord(this.selectionKey, new RegExp('^' + key + '$'));
+		            if (value) {
+		                this.selectedValues.add(key, value);
+		            }
+		        }, this);
+		    }
+		
+		    if (this.isExpanded) {
+		        this._onListRefresh();
+		        this.groupRecords(this.getValue());
+		    }
+		}
+    
+
+     
 });

@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Tue Apr 01 2014 11:01:59 GMT-0700 (PDT) -->
+    <!--  Build Date: Tue Apr 01 2014 15:57:25 GMT-0600 (MDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Tue Apr 01 2014 11:01:59 GMT-0700 (PDT)";
-        var CHECKSUM = 56126872145;
+        var APP_BUILD_DATE = "Tue Apr 01 2014 15:57:25 GMT-0600 (MDT)";
+        var CHECKSUM = 57504258687;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -309,7 +309,34 @@ Ext.override(Rally.ui.picker.FieldPicker,{
         
         console.log("data",data);
         return data;
-    }
+    },
+
+		setValue: function (values) {
+			
+			this.selectedValues.clear();
+		
+		    if (Ext.isArray(values)) {
+		        Ext.each(values, function (value) {
+		            this.selectedValues.add(value.get(this.selectionKey), value);
+		        }, this);
+		    } else {
+		        var items = Ext.Array.merge((values || '').split(','), this.alwaysSelectedValues);
+		        Ext.each(items, function (key) {
+		            var value = this.store && this.store.findRecord(this.selectionKey, new RegExp('^' + key + '$'));
+		            if (value) {
+		                this.selectedValues.add(key, value);
+		            }
+		        }, this);
+		    }
+		
+		    if (this.isExpanded) {
+		        this._onListRefresh();
+		        this.groupRecords(this.getValue());
+		    }
+		}
+    
+
+     
 });
 /**
  * A link that pops up a version dialog box
@@ -692,6 +719,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         var cb = this.down('#column_selector_box').add({
             alwaysExpanded: true,
             xtype: 'rallyfieldpicker',
+            id: 'big_grid_field_picker',
             autoExpand: true,
             multi_field_list: this.multi_field_list,
             modelTypes: [me.type],
@@ -1078,7 +1106,6 @@ Ext.define('CustomApp', {
     			//this.logger.log ('record url ' + i,records[i]);	
     			//story_names += '<a href="'+ url + '">' + records[i].get('FormattedID')   + '</a> : ' + records[i].get('Name') +  '<br>';
     			story_names +=  records[i].get('FormattedID')   + ': ' + records[i].get('Name') +  '<br>';
-    	
     			};
     	}
     	return story_names; 
