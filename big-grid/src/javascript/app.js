@@ -7,8 +7,7 @@ Ext.define('CustomApp', {
         'Rally.ui.grid.Grid',
         'Rally.data.ModelFactory',
         'Rally.ui.grid.plugin.PercentDonePopoverPlugin',
-        'Rally.nav.Message',//Needed for the Rally.nav.Manager
-        'Rally.util.Ref'  //Needed for the Rally.nav.Manager
+
     ],
 
     items: [
@@ -267,10 +266,6 @@ Ext.define('CustomApp', {
     	if (records.length > 0){
     		for (var i=0;i < records.length; i++)
     			{
-    			//Need to determine a way to get the detail url
-    			//var url =  Rally.nav.Manager.getDetailUrl(records[i].ObjectID);
-    			//this.logger.log ('record url ' + i,records[i]);	
-    			//story_names += '<a href="'+ url + '">' + records[i].get('FormattedID')   + '</a> : ' + records[i].get('Name') +  '<br>';
     			story_names +=  records[i].get('FormattedID')   + ': ' + records[i].get('Name') +  '<br>';
     	        this.logger.log ('recordassociations', records[i].getAssociatedData);
     			};
