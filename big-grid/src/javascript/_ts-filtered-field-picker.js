@@ -1,5 +1,5 @@
 Ext.override(Rally.ui.picker.FieldPicker,{
-
+    
     _buildStoreData: function(models) {
         var me = this;
         var data = {};
