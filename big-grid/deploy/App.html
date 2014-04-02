@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Tue Apr 01 2014 18:33:54 GMT-0700 (PDT) -->
+    <!--  Build Date: Wed Apr 02 2014 09:40:46 GMT-0700 (PDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Tue Apr 01 2014 18:33:54 GMT-0700 (PDT)";
-        var CHECKSUM = 56673143290;
+        var APP_BUILD_DATE = "Wed Apr 02 2014 09:40:46 GMT-0700 (PDT)";
+        var CHECKSUM = 55354014132;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -266,7 +266,7 @@ Ext.define('Rally.technicalservices.TagDialog',{
     }
 });
 Ext.override(Rally.ui.picker.FieldPicker,{
-
+    
     _buildStoreData: function(models) {
         var me = this;
         var data = {};
@@ -824,8 +824,7 @@ Ext.define('CustomApp', {
         'Rally.ui.grid.Grid',
         'Rally.data.ModelFactory',
         'Rally.ui.grid.plugin.PercentDonePopoverPlugin',
-        'Rally.nav.Message',//Needed for the Rally.nav.Manager
-        'Rally.util.Ref'  //Needed for the Rally.nav.Manager
+
     ],
 
     items: [
@@ -1084,10 +1083,6 @@ Ext.define('CustomApp', {
     	if (records.length > 0){
     		for (var i=0;i < records.length; i++)
     			{
-    			//Need to determine a way to get the detail url
-    			//var url =  Rally.nav.Manager.getDetailUrl(records[i].ObjectID);
-    			//this.logger.log ('record url ' + i,records[i]);	
-    			//story_names += '<a href="'+ url + '">' + records[i].get('FormattedID')   + '</a> : ' + records[i].get('Name') +  '<br>';
     			story_names +=  records[i].get('FormattedID')   + ': ' + records[i].get('Name') +  '<br>';
     	        this.logger.log ('recordassociations', records[i].getAssociatedData);
     			};
