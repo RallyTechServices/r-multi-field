@@ -57,11 +57,11 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                 xtype:'container',
                 itemId: 'column_selector_box'
             },
-            /*{
+            {
                 xtype:'container',
                 itemId: 'multichoice_column_selector_box',
                 height: 100
-            },*/
+            },
             {
                 xtype:'container',
                 itemId:'query_selector_box'
@@ -198,7 +198,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         var me = this;
         this._addModelChooser();
         this._addColumnChooser();
-        //this._addMultiChoiceColumnChooser();
+        this._addMultiChoiceColumnChooser();
         this._addQueryChooser();
         this._addPageSizeChooser();
         
