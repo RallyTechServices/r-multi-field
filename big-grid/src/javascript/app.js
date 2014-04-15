@@ -6,8 +6,7 @@ Ext.define('CustomApp', {
         'Rally.data.wsapi.Filter',
         'Rally.ui.grid.Grid',
         'Rally.data.ModelFactory',
-        'Rally.ui.grid.plugin.PercentDonePopoverPlugin',
-
+        'Rally.ui.grid.plugin.PercentDonePopoverPlugin'
     ],
 
     items: [
@@ -26,6 +25,9 @@ Ext.define('CustomApp', {
     launch: function() {
         var me = this;
 
+        var i_am_an_admin = Rally.environment.getContext().getPermissions().isWorkspaceOrSubscriptionAdmin();
+        this.logger.log("Am I an admin: ", i_am_an_admin);
+        
         Rally.data.PreferenceManager.load({
             appID: this.getAppId(),
             filterByUser: true,
@@ -39,14 +41,16 @@ Ext.define('CustomApp', {
                 
                 me._getMulitFieldList();
                 
-                me.down('#settings_box').add({
-                    xtype: 'rallybutton',
-                    text: 'Settings',
-                    handler: function() {
-                        me._showSettingsDialog();
-                    },
-                    scope: me
-                });
+                if (i_am_an_admin) {
+                    me.down('#settings_box').add({
+                        xtype: 'rallybutton',
+                        text: 'Settings',
+                        handler: function() {
+                            me._showSettingsDialog();
+                        },
+                        scope: me
+                    });
+                }
                 
                 me._makeAndDisplayGrid();
             }

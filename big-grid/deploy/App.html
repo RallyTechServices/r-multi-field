@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Wed Apr 02 2014 13:36:20 GMT-0700 (PDT) -->
+    <!--  Build Date: Mon Apr 14 2014 21:04:46 GMT-0700 (PDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Wed Apr 02 2014 13:36:20 GMT-0700 (PDT)";
-        var CHECKSUM = 112567986147;
+        var APP_BUILD_DATE = "Mon Apr 14 2014 21:04:46 GMT-0700 (PDT)";
+        var CHECKSUM = 113615504084;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -1351,8 +1351,7 @@ Ext.define('CustomApp', {
         'Rally.data.wsapi.Filter',
         'Rally.ui.grid.Grid',
         'Rally.data.ModelFactory',
-        'Rally.ui.grid.plugin.PercentDonePopoverPlugin',
-
+        'Rally.ui.grid.plugin.PercentDonePopoverPlugin'
     ],
 
     items: [
@@ -1371,6 +1370,9 @@ Ext.define('CustomApp', {
     launch: function() {
         var me = this;
 
+        var i_am_an_admin = Rally.environment.getContext().getPermissions().isWorkspaceOrSubscriptionAdmin();
+        this.logger.log("Am I an admin: ", i_am_an_admin);
+        
         Rally.data.PreferenceManager.load({
             appID: this.getAppId(),
             filterByUser: true,
@@ -1384,14 +1386,16 @@ Ext.define('CustomApp', {
                 
                 me._getMulitFieldList();
                 
-                me.down('#settings_box').add({
-                    xtype: 'rallybutton',
-                    text: 'Settings',
-                    handler: function() {
-                        me._showSettingsDialog();
-                    },
-                    scope: me
-                });
+                if (i_am_an_admin) {
+                    me.down('#settings_box').add({
+                        xtype: 'rallybutton',
+                        text: 'Settings',
+                        handler: function() {
+                            me._showSettingsDialog();
+                        },
+                        scope: me
+                    });
+                }
                 
                 me._makeAndDisplayGrid();
             }
