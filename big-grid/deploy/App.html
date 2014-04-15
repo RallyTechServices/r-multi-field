@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Mon Apr 14 2014 21:29:50 GMT-0700 (PDT) -->
+    <!--  Build Date: Tue Apr 15 2014 10:09:22 GMT-0700 (PDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Mon Apr 14 2014 21:29:50 GMT-0700 (PDT)";
-        var CHECKSUM = 113685493603;
+        var APP_BUILD_DATE = "Tue Apr 15 2014 10:09:22 GMT-0700 (PDT)";
+        var CHECKSUM = 113764696976;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -1568,7 +1568,8 @@ Ext.define('CustomApp', {
             column = { 
                 text: 'Derived Predecessors',
                 xtype: 'templatecolumn', 
-                tpl: '--'
+                tpl: '--',
+                width: 200
             };
             column.renderer = function(value,metaData,record,row,col,store,view) {
                 var display_value = "";

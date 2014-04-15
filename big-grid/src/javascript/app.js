@@ -222,7 +222,8 @@ Ext.define('CustomApp', {
             column = { 
                 text: 'Derived Predecessors',
                 xtype: 'templatecolumn', 
-                tpl: '--'
+                tpl: '--',
+                width: 200
             };
             column.renderer = function(value,metaData,record,row,col,store,view) {
                 var display_value = "";
