@@ -242,21 +242,15 @@ Ext.define('CustomApp', {
                         load: function(store,records){
                             var count = records.length || 0;
                             var containers = Ext.query('#'+div_id);
-                            
-                            
+           
                             if ( containers.length == 1 ){
                         		containers[0].innerHTML = this._getDerivedPredecessorsContent(records); //count;
                         		//Need to re-draw the grid here because the original content likely required less space than the new content so content may be cutoff
                         		this.down('rallygrid').doLayout();
-                        		
                             }
                         }
                     }
                 });
-//                value = record.get('Predecessors');
-//                if ( typeof value.Count !== 'undefined' ) {
-//                    display_value = value.Count;
-//                }
                 return '<div id="' + div_id + '">loading</div>';
             }
         }
@@ -268,11 +262,12 @@ Ext.define('CustomApp', {
     {
     	var story_names = '';
     	if (records.length > 0){
-    		for (var i=0;i < records.length; i++)
-    			{
-    			story_names +=  records[i].get('FormattedID')   + ': ' + records[i].get('Name') +  '<br>';
+    		for (var i=0;i < records.length; i++){
+                console.log(records[i]);
+                var link = "<a target='_blank' href='https://rally1.rallydev.com/#/detail/userstory/" + records[i].get('ObjectID') + "'>" + records[i].get('FormattedID')  + "</a>";
+    			story_names +=    link + ': ' + records[i].get('Name') +  '<br>';
     	        this.logger.log ('recordassociations', records[i].getAssociatedData);
-    			};
+			};
     	}
     	return story_names; 
     
