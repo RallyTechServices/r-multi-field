@@ -55,12 +55,13 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             },
             {
                 xtype:'container',
-                itemId: 'column_selector_box'
+                itemId: 'column_selector_box',
+                height: 80
             },
             {
                 xtype:'container',
                 itemId: 'multichoice_column_selector_box',
-                height: 100
+                height: 80
             },
             {
                 xtype:'container',
