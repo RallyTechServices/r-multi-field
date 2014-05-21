@@ -1,6 +1,6 @@
 {
     "name": "Field Content Definer",
     "className": "CustomApp",
-    "server": "https://demo01.rallydev.com",
+    "server": "https://demo-west.rallydev.com",
     "sdk": "2.0rc1"
 }
