@@ -42,7 +42,6 @@ Ext.override(Rally.ui.picker.FieldPicker,{
 		setValue: function (values) {
 			
 			this.selectedValues.clear();
-		
 		    if (Ext.isArray(values)) {
 		        Ext.each(values, function (value) {
 		            this.selectedValues.add(value.get(this.selectionKey), value);

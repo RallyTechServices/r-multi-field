@@ -181,17 +181,17 @@ Ext.define('Rally.techservices.TSMultiPicker', {
                 {name:this.groupName,type:'string'}
             ]
         });
-        console.log (this.groupName);
+
         var store = Ext.create('Ext.data.Store',{
             model:'Choice'
         });
 
         var key = this._getKey(this.config.model, this.field_name); 
-        console.log('key: ' + key);
+
         Rally.data.PreferenceManager.load({
             filterByName: key,
             success: function(prefs) {
-                console.log('success');
+
                 var values = [];
                 if ( prefs && prefs[key] ) {
                     Ext.Array.each(Ext.JSON.decode(prefs[key]),function(value){
@@ -237,7 +237,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * Create the BoundList based on #listCfg and setup listeners to some of its events.
      */
     _createList: function() {
-        console.log('_createList');
         var listCfg = {
             store: this.store,
             tpl: this._getListTpl()
@@ -258,7 +257,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * Select the checkboxes for the selected records
      */
     _selectCheckboxes: function() {
-        console.log('_selectCheckboxes');
+
         if (this.list && this.list.getSelectionModel()) {
             Ext.each(this.list.getSelectionModel().getSelection(), function(record) {
                 this._selectRowCheckbox(record.get(this.recordKey));
@@ -270,7 +269,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * Reset the store, such as removing any previous filters.
      */
     _resetStore: function() {
-        console.log('_resetStore');
         this.store.clearFilter();
         this.store.clearGrouping();
         this.store.requester = this;
@@ -286,7 +284,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     _alignPickerAndList: function() {
-        console.log('_alignPickerAndList');
+
         if (this.isExpanded) {
             if (this.matchFieldWidth) {
 
@@ -307,7 +305,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * Determine the height of the picker panel by adding up the heights of all its children items.
      */
     _getPickerHeight: function() {
-        console.log('_getPickerHeight');
+     
         var totalHeight = 0;
         Ext.each(this.picker.items.getRange(), function(item) {
             totalHeight += item.getHeight();
@@ -319,7 +317,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * Ensure that the selected rows in the list match the internal array of selected values
      */
     _syncSelection: function() {
-        console.log('_syncSelection');
+ 
         if (this.list) {
             var selectionModel = this.list.getSelectionModel();
             selectionModel.deselectAll(true);
@@ -332,7 +330,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * @param recordId the value of the record's ID, which corresponds to the row
      */
     _getOptionCheckbox: function(recordId) {
-        console.log('_getOptionCheckbox',recordId);
+        //console.log('_getOptionCheckbox',recordId);
         var checkboxSelector = 'li.' + this.id + '.' + this._getOptionClass(recordId) + ' .rui-picker-checkbox';
         return Ext.get(Ext.DomQuery.selectNode(checkboxSelector));
     },
@@ -341,12 +339,12 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * @param recordId the value of the record's ID, which corresponds to the row
      */
     _getOptionClass: function(recordId) {
-        console.log('_getOptionClass',recordId);
+        //console.log('_getOptionClass',recordId);
         return 'rui-multi-object-picker-option-id-' + recordId.toString();
     },
 
     _selectRowCheckbox: function(recordId) {
-        console.log('_selectRowCheckbox',recordId);
+        //console.log('_selectRowCheckbox',recordId);
         var checkbox = this._getOptionCheckbox(recordId);
         if (checkbox) {
             checkbox.addCls('rui-picker-cb-checked');
@@ -354,17 +352,17 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     _deselectRowCheckbox: function(recordId) {
-        console.log('_deselectRowCheckbox',recordId);
+        //console.log('_deselectRowCheckbox',recordId);
         this._getOptionCheckbox(recordId).removeCls('rui-picker-cb-checked');
     },
 
     _isRecordInList: function(record) {
-        console.log('_isRecordInList');
+        //console.log('_isRecordInList');
         return this.list.getNode(record) ? true : false;
     },
 
     _autoExpand: function() {
-        console.log('_autoExpand');
+        //console.log('_autoExpand');
         if (this.autoExpand && (!this.isExpanded)) {
             this.onTriggerClick();
         }

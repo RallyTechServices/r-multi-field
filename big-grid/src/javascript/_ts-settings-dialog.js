@@ -141,9 +141,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             type_name = this.down('#model_chooser').getValue();  
         }
         var columns = [];
-        var fetch = [];
-        console.log('test ' + type_name);    
-
+        var fetch = [];  
+        var multi_choice_selected = [];
   
         if ( this.down('#column_chooser') ) {
             var fields = this.down('#column_chooser').getValue();
@@ -154,12 +153,13 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                         text: field.get('displayName'),
                         editor: {
                             xtype:'tsmultipicker',
-                            autoExpand: true,
+                            autoExpand: false,
                             field_name:field.get('name'),
                             model: type_name
                             
                         }
                     });
+                    multi_choice_selected.push(field.get('name'));
                 } else {
                     columns.push(me._getColumnFromField(field)); 
                 }
@@ -202,7 +202,6 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         return column_def;
     },
     _addChoosers: function() {
-        var me = this;
         this._addModelChooser();
         this._addColumnChooser();
         this._addMultiChoiceColumnChooser();
@@ -211,9 +210,9 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         
     },
     _addModelChooser: function() {
-        var me = this;
-        var type_store = Ext.create('Rally.data.custom.Store',{
-            data: me.artifact_types
+    //    var me = this;
+    //    var type_store = Ext.create('Rally.data.custom.Store',{
+    //        data: me.artifact_types
         });
         me.logger.log('_addModelChooser:type', me.type);
         this.down('#model_selector_box').add({
@@ -239,7 +238,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                 select: function(cb,new_value){
                     this.type = cb.getRecord().get('TypePath');
                     this._addColumnChooser();
-                    //this._addMultiChoiceColumnChooser();
+                    this._addMultiChoiceColumnChooser();  ///This was commented out and I'm not sure why...
                 }
             }
         });
@@ -260,6 +259,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             ts_field_filter: this._filterOutTextFields,
             value:this.fetch_list
         });
+
     },
     _addMultiChoiceColumnChooser: function() {
         var me = this;
@@ -272,7 +272,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             itemId: 'multichoice_column_chooser',
             labelWidth: 75,
             fieldLabel: 'Multi-select Columns',
-            ts_field_filter: this._filterInPossibleMultiFields
+            ts_field_filter: this._filterInPossibleMultiFields,
+            value: this.multi_field_list
         });
     },
     _addQueryChooser: function() {

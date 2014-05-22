@@ -63,6 +63,7 @@ Ext.define('CustomApp', {
         var me = this;
         //var key = 'rally.techservices.fieldvalues.' + field_name;
         var key = 'rally.techservices.biggrid.fieldvalues.';
+        //var key = 'rally.techservices.bigmulti.settings';
         this.multi_field_list = [];
         
         Rally.data.PreferenceManager.load({
@@ -74,6 +75,7 @@ Ext.define('CustomApp', {
             }],
             success: function(prefs) {
                 me.logger.log("prefs",prefs);
+                me.logger.log(prefs);
                 if ( prefs ) {
                     Ext.Object.each(prefs,function(name,value){
                         me.logger.log(name + ', ' + value);
@@ -84,6 +86,19 @@ Ext.define('CustomApp', {
                 }
             }
         });
+        
+        if (me.multi_field_list.length==0){
+            //Use getSetting override
+            var columns = this.getSetting('columns');
+            Ext.Array.each(columns, function(col){
+                if (col.editor){
+                    if (col.editor.xtype == 'tsmultipicker'){
+                        me.multi_field_list.push(col.dataIndex);
+                    }
+                }  
+            });
+        }
+        this.multi_field_list = this.multi_field_list.join(',');
     },
     _makeAndDisplayGrid: function() {
         var me = this;
@@ -265,7 +280,6 @@ Ext.define('CustomApp', {
     	var story_names = '';
     	if (records.length > 0){
     		for (var i=0;i < records.length; i++){
-                console.log(records[i]);
                 var link = "<a target='_blank' href='https://rally1.rallydev.com/#/detail/userstory/" + records[i].get('ObjectID') + "'>" + records[i].get('FormattedID')  + "</a>";
     			story_names +=    link + ': ' + records[i].get('Name') +  '<br>';
     	        this.logger.log ('recordassociations', records[i].getAssociatedData);
@@ -286,6 +300,7 @@ Ext.define('CustomApp', {
     _showSettingsDialog: function() {
         if ( this.dialog ) { this.dialog.destroy(); } 
         var config = this.config;
+        
         this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
             type: this.getSetting('type'),
             query_string: this.getSetting('query_string'),
