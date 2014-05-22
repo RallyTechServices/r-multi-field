@@ -33,12 +33,14 @@ Ext.define('Rally.techservices.TSMultiPicker', {
          * The separator for joining the array of choices
          */
 
-        separator: ','
+        separator: ',',
+        model: null
+        
         
     },
 
     constructor: function(config) {
-        console.log('constructor');
+        console.log('tsmultipicker constructor');
         this.mergeConfig(config);
         this.callParent([this.config]);
     },
@@ -51,6 +53,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
 
     setValue: function(values) {
         console.log('setValue',values);
+
         this.selectedValues.clear();
 
         if(Ext.isArray(values)) {
@@ -71,6 +74,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
             this._onListRefresh();
             this.groupRecords(this.getValue());
         }
+        console.log(this.getValue());
     },
 
     // convert the records into a separated string
@@ -79,7 +83,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
         var records = this._getRecordValue();
         var value = [];
         
-        
+        console.log(records);
         Ext.Array.each(records,function(record){
             if (record) {
                 value.push(record.get(this.recordKey));
@@ -162,7 +166,10 @@ Ext.define('Rally.techservices.TSMultiPicker', {
             this.inputEl.addCls('rui-multi-object-picker-no-trigger');
         }
     },
-
+    _getKey: function(model_name, field_name){
+        model_name = model_name.replace('/','.');
+        return 'rally.techservices.fieldvalues.' + model_name + '.' + field_name;
+    },
     _createStoreAndExpand: function() {
         console.log('_createStoreAndExpand');
         var me = this;
@@ -174,12 +181,13 @@ Ext.define('Rally.techservices.TSMultiPicker', {
                 {name:this.groupName,type:'string'}
             ]
         });
-        
+        console.log (this.groupName);
         var store = Ext.create('Ext.data.Store',{
             model:'Choice'
         });
 
-        var key = 'rally.techservices.fieldvalues.' + this.field_name;
+        var key = this._getKey(this.config.model, this.field_name); 
+        console.log('key: ' + key);
         Rally.data.PreferenceManager.load({
             filterByName: key,
             success: function(prefs) {
@@ -216,8 +224,8 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      */
     _getRecordValue: function() {
         var me = this;
-        console.log('_getRecordValue');
         var recordArray = [];
+
         this.selectedValues.eachKey(function(key, value) {
             var record = this.store.findRecord(this.selectionKey, new RegExp('^' + value.get(this.selectionKey) + '$'));
             recordArray.push(record);

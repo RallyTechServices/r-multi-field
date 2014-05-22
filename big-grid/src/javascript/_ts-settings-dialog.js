@@ -138,10 +138,13 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         var config = {};
         if ( this.down('#model_chooser') &&  this.down('#model_chooser').getRecord() ) {
             config.type = this.down('#model_chooser').getRecord().get('TypePath');
+            type_name = this.down('#model_chooser').getValue();  
         }
         var columns = [];
         var fetch = [];
-            
+        console.log('test ' + type_name);    
+
+  
         if ( this.down('#column_chooser') ) {
             var fields = this.down('#column_chooser').getValue();
             Ext.Array.each(fields,function(field){
@@ -152,7 +155,9 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                         editor: {
                             xtype:'tsmultipicker',
                             autoExpand: true,
-                            field_name:field.get('name')
+                            field_name:field.get('name'),
+                            model: type_name
+                            
                         }
                     });
                 } else {
@@ -169,7 +174,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                     text: field.get('displayName'),
                     editor: {
                         xtype:'tsmultipicker',
-                        field_name:field.get('name')
+                        field_name:field.get('name'),
+                        model: type_name
                     }
                 });
                 fetch.push(field.get('name'));
@@ -213,8 +219,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         this.down('#model_selector_box').add({
             xtype:'rallycombobox',
             itemId: 'model_chooser',
-            /*displayField: 'Name',
-            valueField: 'Value',
+            displayField: 'DisplayName',
+            /*valueField: 'Value',
             store: type_store,*/
             storeConfig: {
                 autoLoad: true,

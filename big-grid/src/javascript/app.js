@@ -76,6 +76,7 @@ Ext.define('CustomApp', {
                 me.logger.log("prefs",prefs);
                 if ( prefs ) {
                     Ext.Object.each(prefs,function(name,value){
+                        me.logger.log(name + ', ' + value);
                         var name_array = name.split('.');
                         var field_name = name_array[name_array.length - 1];
                         me.multi_field_list.push(field_name);

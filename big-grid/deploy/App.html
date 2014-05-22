@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Tue Apr 15 2014 10:09:22 GMT-0700 (PDT) -->
+    <!--  Build Date: Wed May 21 2014 18:16:08 GMT-0600 (MDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Tue Apr 15 2014 10:09:22 GMT-0700 (PDT)";
-        var CHECKSUM = 113764696976;
+        var APP_BUILD_DATE = "Wed May 21 2014 18:16:08 GMT-0600 (MDT)";
+        var CHECKSUM = 116142370716;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -490,12 +490,14 @@ Ext.define('Rally.techservices.TSMultiPicker', {
          * The separator for joining the array of choices
          */
 
-        separator: ','
+        separator: ',',
+        model: null
+        
         
     },
 
     constructor: function(config) {
-        console.log('constructor');
+        console.log('tsmultipicker constructor');
         this.mergeConfig(config);
         this.callParent([this.config]);
     },
@@ -508,6 +510,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
 
     setValue: function(values) {
         console.log('setValue',values);
+
         this.selectedValues.clear();
 
         if(Ext.isArray(values)) {
@@ -528,6 +531,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
             this._onListRefresh();
             this.groupRecords(this.getValue());
         }
+        console.log(this.getValue());
     },
 
     // convert the records into a separated string
@@ -536,7 +540,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
         var records = this._getRecordValue();
         var value = [];
         
-        
+        console.log(records);
         Ext.Array.each(records,function(record){
             if (record) {
                 value.push(record.get(this.recordKey));
@@ -619,7 +623,10 @@ Ext.define('Rally.techservices.TSMultiPicker', {
             this.inputEl.addCls('rui-multi-object-picker-no-trigger');
         }
     },
-
+    _getKey: function(model_name, field_name){
+        model_name = model_name.replace('/','.');
+        return 'rally.techservices.fieldvalues.' + model_name + '.' + field_name;
+    },
     _createStoreAndExpand: function() {
         console.log('_createStoreAndExpand');
         var me = this;
@@ -631,12 +638,13 @@ Ext.define('Rally.techservices.TSMultiPicker', {
                 {name:this.groupName,type:'string'}
             ]
         });
-        
+        console.log (this.groupName);
         var store = Ext.create('Ext.data.Store',{
             model:'Choice'
         });
 
-        var key = 'rally.techservices.fieldvalues.' + this.field_name;
+        var key = this._getKey(this.config.model, this.field_name); 
+        console.log('key: ' + key);
         Rally.data.PreferenceManager.load({
             filterByName: key,
             success: function(prefs) {
@@ -673,8 +681,8 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      */
     _getRecordValue: function() {
         var me = this;
-        console.log('_getRecordValue');
         var recordArray = [];
+
         this.selectedValues.eachKey(function(key, value) {
             var record = this.store.findRecord(this.selectionKey, new RegExp('^' + value.get(this.selectionKey) + '$'));
             recordArray.push(record);
@@ -1138,10 +1146,13 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         var config = {};
         if ( this.down('#model_chooser') &&  this.down('#model_chooser').getRecord() ) {
             config.type = this.down('#model_chooser').getRecord().get('TypePath');
+            type_name = this.down('#model_chooser').getValue();  
         }
         var columns = [];
         var fetch = [];
-            
+        console.log('test ' + type_name);    
+
+  
         if ( this.down('#column_chooser') ) {
             var fields = this.down('#column_chooser').getValue();
             Ext.Array.each(fields,function(field){
@@ -1152,7 +1163,9 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                         editor: {
                             xtype:'tsmultipicker',
                             autoExpand: true,
-                            field_name:field.get('name')
+                            field_name:field.get('name'),
+                            model: type_name
+                            
                         }
                     });
                 } else {
@@ -1169,7 +1182,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                     text: field.get('displayName'),
                     editor: {
                         xtype:'tsmultipicker',
-                        field_name:field.get('name')
+                        field_name:field.get('name'),
+                        model: type_name
                     }
                 });
                 fetch.push(field.get('name'));
@@ -1213,8 +1227,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         this.down('#model_selector_box').add({
             xtype:'rallycombobox',
             itemId: 'model_chooser',
-            /*displayField: 'Name',
-            valueField: 'Value',
+            displayField: 'DisplayName',
+            /*valueField: 'Value',
             store: type_store,*/
             storeConfig: {
                 autoLoad: true,
@@ -1422,6 +1436,7 @@ Ext.define('CustomApp', {
                 me.logger.log("prefs",prefs);
                 if ( prefs ) {
                     Ext.Object.each(prefs,function(name,value){
+                        me.logger.log(name + ', ' + value);
                         var name_array = name.split('.');
                         var field_name = name_array[name_array.length - 1];
                         me.multi_field_list.push(field_name);
