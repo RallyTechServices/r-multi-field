@@ -210,10 +210,10 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         
     },
     _addModelChooser: function() {
-    //    var me = this;
+        var me = this;
     //    var type_store = Ext.create('Rally.data.custom.Store',{
     //        data: me.artifact_types
-        });
+    //    });
         me.logger.log('_addModelChooser:type', me.type);
         this.down('#model_selector_box').add({
             xtype:'rallycombobox',

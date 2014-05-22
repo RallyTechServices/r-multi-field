@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Wed May 21 2014 22:41:50 GMT-0600 (MDT) -->
+    <!--  Build Date: Thu May 22 2014 06:55:27 GMT-0600 (MDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Wed May 21 2014 22:41:50 GMT-0600 (MDT)";
-        var CHECKSUM = 117569314712;
+        var APP_BUILD_DATE = "Thu May 22 2014 06:55:27 GMT-0600 (MDT)";
+        var CHECKSUM = 117569320343;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -1215,10 +1215,10 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         
     },
     _addModelChooser: function() {
-    //    var me = this;
+        var me = this;
     //    var type_store = Ext.create('Rally.data.custom.Store',{
     //        data: me.artifact_types
-        });
+    //    });
         me.logger.log('_addModelChooser:type', me.type);
         this.down('#model_selector_box').add({
             xtype:'rallycombobox',
