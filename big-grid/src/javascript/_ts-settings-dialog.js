@@ -126,12 +126,25 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                     text: 'Cancel',
                     handler: function() {
                         this.fireEvent('cancelChosen');
-                        this.close()
+                        this.close();
                     },
                     scope: this
                 }
             ]
         });
+    },
+    _getMultiSelectColumnConfig: function(type_name, field){
+        var multi_column_cfg = {
+            dataIndex:field.get('name'),
+            text: field.get('displayName'),
+            editor: {
+                xtype:'tsmultipicker',
+                autoExpand: false,
+                field_name:field.get('name'),
+                model: type_name
+            }
+        };
+        return multi_column_cfg;
     },
     _getConfig: function() {
         var me = this;
@@ -142,24 +155,12 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         }
         var columns = [];
         var fetch = [];  
-        var multi_choice_selected = [];
-  
+         
         if ( this.down('#column_chooser') ) {
             var fields = this.down('#column_chooser').getValue();
             Ext.Array.each(fields,function(field){
                 if ( Ext.Array.contains(me.multi_field_list,field.get('name') ) ) {
-                    columns.push({
-                        dataIndex:field.get('name'),
-                        text: field.get('displayName'),
-                        editor: {
-                            xtype:'tsmultipicker',
-                            autoExpand: false,
-                            field_name:field.get('name'),
-                            model: type_name
-                            
-                        }
-                    });
-                    multi_choice_selected.push(field.get('name'));
+                    //columns.push(me._getMultiSelectColumnConfig(type_name, field));
                 } else {
                     columns.push(me._getColumnFromField(field)); 
                 }
@@ -169,15 +170,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         if ( this.down('#multichoice_column_chooser') ) {
             var fields = this.down('#multichoice_column_chooser').getValue();
             Ext.Array.each(fields,function(field){
-                columns.push({
-                    dataIndex:field.get('name'),
-                    text: field.get('displayName'),
-                    editor: {
-                        xtype:'tsmultipicker',
-                        field_name:field.get('name'),
-                        model: type_name
-                    }
-                });
+                var multi_column_cfg = me._getMultiSelectColumnConfig(type_name,field);
+                columns.push(multi_column_cfg);
                 fetch.push(field.get('name'));
             });
         }
@@ -211,9 +205,6 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     },
     _addModelChooser: function() {
         var me = this;
-    //    var type_store = Ext.create('Rally.data.custom.Store',{
-    //        data: me.artifact_types
-    //    });
         me.logger.log('_addModelChooser:type', me.type);
         this.down('#model_selector_box').add({
             xtype:'rallycombobox',
@@ -240,6 +231,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                     this._addColumnChooser();
                     this._addMultiChoiceColumnChooser();  ///This was commented out and I'm not sure why...
                 }
+            
             }
         });
     },
@@ -247,7 +239,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         var me = this;
         this.down('#column_selector_box').removeAll();
         var cb = this.down('#column_selector_box').add({
-            alwaysExpanded: true,
+            //alwaysExpanded: true,
             xtype: 'rallyfieldpicker',
             id: 'big_grid_field_picker',
             autoExpand: true,
@@ -257,9 +249,9 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             labelWidth: 75,
             fieldLabel: 'Columns',
             ts_field_filter: this._filterOutTextFields,
-            value:this.fetch_list
+            value:this.fetch_list,
+            scope: this
         });
-
     },
     _addMultiChoiceColumnChooser: function() {
         var me = this;
