@@ -239,10 +239,10 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         var me = this;
         this.down('#column_selector_box').removeAll();
         var cb = this.down('#column_selector_box').add({
-            //alwaysExpanded: true,
+            alwaysExpanded: false,
             xtype: 'rallyfieldpicker',
             id: 'big_grid_field_picker',
-            autoExpand: true,
+            autoExpand: false,
             multi_field_list: this.multi_field_list,
             modelTypes: [me.type],
             itemId: 'column_chooser',
@@ -258,6 +258,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         
         this.down('#multichoice_column_selector_box').removeAll();
         var cb = this.down('#multichoice_column_selector_box').add({
+            alwaysExpanded: false,
             xtype: 'rallyfieldpicker',
             autoExpand: false,
             modelTypes: [me.type],
