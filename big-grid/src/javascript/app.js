@@ -125,6 +125,10 @@ Ext.define('CustomApp', {
             enableBulkEdit: true,
             autoScroll: true,
             plugins: this._getPlugins(columns),
+            listeners: {
+                scope:this,
+                columnmove: this._onColumnMove
+            },
             storeConfig: {
                 fetch: fetch,
                 models: this.getSetting('type'),
@@ -185,7 +189,32 @@ Ext.define('CustomApp', {
             }
         });
     },
-    
+    _onColumnMove: function(ct,column,fromIdx,toIdx){
+      //reorder columns in updated order to preferences 
+      this.logger.log('_onColumnMove');  
+      var currentIdx =0, newIdx = 0;
+      Ext.each(this.config.columns,function(cfgcol, idx, colary){
+          if (cfgcol.dataIndex == column.dataIndex){
+              currentIdx = idx;
+              newIdx = currentIdx + (toIdx-fromIdx);
+          }
+      });
+      console.log(currentIdx,newIdx);
+      if (currentIdx != newIdx){
+          var movedCol = this.config.columns[currentIdx];
+          this.config.columns.splice(newIdx,0,movedCol);
+          if (newIdx < currentIdx){
+              currentIdx = currentIdx + 1;
+          }
+          this.config.columns.splice(currentIdx,1);
+          this._saveConfig(this.config).then({
+              scope: this,
+              success: function() {
+                  this.logger.log('Column reordering saved to: ', this.config.columns);
+              }
+          });
+      }
+    },
     //Determines the default page size options based on the default page size
     _setPageSizeOptions: function (defaultPageSize)
     {
@@ -219,6 +248,7 @@ Ext.define('CustomApp', {
         var columns = [];
         if ( this.getSetting('columns') ) {
             columns = this.getSetting('columns');
+            console.log('columns...',columns);
         } else if (fetch) {
             columns = Ext.Array.difference(fetch.split(','), this._getFetchOnlyFields());
         }

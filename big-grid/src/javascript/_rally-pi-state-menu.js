@@ -30,12 +30,6 @@
             }
             return null;
         },
-        _callPredicate: function(records){
-            return _.every(records, function(record) {
-                alert(record.get('_type').match(/^portfolioitem/));
-                return record.get('_type').match(/^portfolioitem/);
-            });
-        },
         _onSave: function(){
            var state_value =this.state_dialog.down('rallyfieldvaluecombobox').getValue(); 
            var successfulRecords = Ext.Array.clone(this.records);
