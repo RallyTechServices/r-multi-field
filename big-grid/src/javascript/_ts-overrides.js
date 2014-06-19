@@ -6,10 +6,7 @@ Ext.override(Rally.ui.menu.bulk.RecordMenu,{
         {xtype: 'rallyrecordmenuitembulkdefecttouserstory'},
         {xtype: 'rallyrecordmenuitembulktasktoworkproduct'},
         {xtype: 'rallyrecordmenuitembulktestcasetoworkproduct'},
-        {xtype: 'rallyrecordmenuitembulktestcasetotestfolder'}
-    ]
-//    initComponent: function () {
-//        this.items = this._getMenuItems();
-//        this.callParent(arguments);
-//    }
+        {xtype: 'rallyrecordmenuitembulktestcasetotestfolder'},
+        {xtype: 'rallyrecordmenuitembulkportfolioitemstate'}
+    ],
 });
