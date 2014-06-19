@@ -41,7 +41,6 @@
                 },
                 success: function(readOnlyRecords){
                     //all updates finished, except for given read only records
-                    console.log(readOnlyRecords, successfulRecords);
                     Ext.Array.each(successfulRecords, function(record){
                         if (Ext.Array.contains(readOnlyRecords, record)){
                             successfulRecords.pop(record);

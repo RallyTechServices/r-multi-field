@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Thu Jun 19 2014 10:46:18 GMT-0600 (MDT) -->
+    <!--  Build Date: Thu Jun 19 2014 10:51:32 GMT-0600 (MDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Thu Jun 19 2014 10:46:18 GMT-0600 (MDT)";
-        var CHECKSUM = 145337314803;
+        var APP_BUILD_DATE = "Thu Jun 19 2014 10:51:32 GMT-0600 (MDT)";
+        var CHECKSUM = 144605257069;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -58,7 +58,6 @@
                 },
                 success: function(readOnlyRecords){
                     //all updates finished, except for given read only records
-                    console.log(readOnlyRecords, successfulRecords);
                     Ext.Array.each(successfulRecords, function(record){
                         if (Ext.Array.contains(readOnlyRecords, record)){
                             successfulRecords.pop(record);
@@ -1685,7 +1684,6 @@ Ext.define('CustomApp', {
               newIdx = currentIdx + (toIdx-fromIdx);
           }
       });
-      console.log(currentIdx,newIdx);
       if (currentIdx != newIdx){
           var movedCol = this.config.columns[currentIdx];
           this.config.columns.splice(newIdx,0,movedCol);
@@ -1734,7 +1732,6 @@ Ext.define('CustomApp', {
         var columns = [];
         if ( this.getSetting('columns') ) {
             columns = this.getSetting('columns');
-            console.log('columns...',columns);
         } else if (fetch) {
             columns = Ext.Array.difference(fetch.split(','), this._getFetchOnlyFields());
         }

@@ -199,7 +199,6 @@ Ext.define('CustomApp', {
               newIdx = currentIdx + (toIdx-fromIdx);
           }
       });
-      console.log(currentIdx,newIdx);
       if (currentIdx != newIdx){
           var movedCol = this.config.columns[currentIdx];
           this.config.columns.splice(newIdx,0,movedCol);
@@ -248,7 +247,6 @@ Ext.define('CustomApp', {
         var columns = [];
         if ( this.getSetting('columns') ) {
             columns = this.getSetting('columns');
-            console.log('columns...',columns);
         } else if (fetch) {
             columns = Ext.Array.difference(fetch.split(','), this._getFetchOnlyFields());
         }
