@@ -3,11 +3,11 @@
 <head>
     <title>Big Grid</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Fri Jun 20 2014 09:06:49 GMT-0600 (MDT) -->
+    <!--  Build Date: Fri Jun 20 2014 09:12:28 GMT-0600 (MDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Fri Jun 20 2014 09:06:49 GMT-0600 (MDT)";
-        var CHECKSUM = 152286280527;
+        var APP_BUILD_DATE = "Fri Jun 20 2014 09:12:28 GMT-0600 (MDT)";
+        var CHECKSUM = 144943317603;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc2/sdk.js"></script>
@@ -277,49 +277,6 @@
         }
     });
 })();
-
-/*
- */
-Ext.define('Rally.technicalservices.AppSettings',{
-    extend:'Rally.app.AppSettings',
-        
-    initComponent: function() {
-        this.callParent(arguments);
-
-        this.addEvents(
-            /**
-             * @event
-             * Fired when the settings have been saved and the app view should show again.
-             * @param {Object} settings the settings that were saved
-             */
-            'save',
-
-            /**
-             * @event
-             * Fired when the cancel button has been clicked and the app view should show again.
-             */
-            'cancel',
-
-            /**
-             * @event
-             * Fired when all of the appsettings components have fired their ready event.
-             */
-            'appsettingsready'
-        );
-
-        this.isReady = {};
-
-        if (typeof(this.getAppId()) == 'undefined' ) {
-            console.log('App is not running from within Rally.');
-            this._showExternalSettingsDialog(this.getSettingsFields());
-            console.log('WORKSPACE',this.getContext().getWorkspace().Name);
-            console.log('PROJECT',this.getContext().getProject().Name);
-            console.log('USER', this.getContext().getUser().UserName);
-        } 
-
-        this._loadPreferenceModel();
-    }
-});
 
 Ext.define('Rally.technicalservices.TagDialog',{
     extend: 'Rally.ui.dialog.Dialog',
@@ -1514,16 +1471,6 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     }
     
 });
-Ext.define('Rally.technicalservices.AppSettings',{
-    extend:'Ext.Container',
-    alias: 'rallytsappsettings',
-    artifact_type: 'HierarchicalRequirement',
-    _updateSettingsFieldPicker: function(artifact_type){
-        alert(artifact_type);
-    }
-
-});
-
 Ext.define('TSStringFilter',{
     extend: 'Rally.data.QueryFilter',
     config: {
