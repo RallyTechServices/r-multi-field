@@ -169,7 +169,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         }
         if ( this.down('#multichoice_column_chooser') ) {
             var multi_fields = this.down('#multichoice_column_chooser').getValue();
-            console.log('multi', multi_fields, columns);
+
             Ext.Array.each(multi_fields,function(mf){
                 var multi_column_cfg = me._getMultiSelectColumnConfig(type_name,mf);
                 if (!Ext.Array.contains(fetch,mf.get('name'))) {
@@ -257,7 +257,6 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     },
     _addMultiChoiceColumnChooser: function() {
         var me = this;
-        
         this.down('#multichoice_column_selector_box').removeAll();
         var cb = this.down('#multichoice_column_selector_box').add({
             xtype: 'rallyfieldpicker',
@@ -306,6 +305,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         }
         if ( attribute_defn ) {
             var attribute_type = attribute_defn.AttributeType;
+
             if ( attribute_type == "TEXT" ) {
                 return Ext.Array.contains(this.multi_field_list,field.name);
                 return false;
