@@ -160,7 +160,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             var fields = this.down('#column_chooser').getValue();
             Ext.Array.each(fields,function(field){
                 if ( Ext.Array.contains(me.multi_field_list,field.get('name') ) ) {
-                    //columns.push(me._getMultiSelectColumnConfig(type_name, field));
+                   columns.push(me._getMultiSelectColumnConfig(type_name, field));
                 } else {
                     columns.push(me._getColumnFromField(field)); 
                 }
@@ -168,11 +168,14 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             });
         }
         if ( this.down('#multichoice_column_chooser') ) {
-            var fields = this.down('#multichoice_column_chooser').getValue();
-            Ext.Array.each(fields,function(field){
-                var multi_column_cfg = me._getMultiSelectColumnConfig(type_name,field);
-                columns.push(multi_column_cfg);
-                fetch.push(field.get('name'));
+            var multi_fields = this.down('#multichoice_column_chooser').getValue();
+            console.log('multi', multi_fields, columns);
+            Ext.Array.each(multi_fields,function(mf){
+                var multi_column_cfg = me._getMultiSelectColumnConfig(type_name,mf);
+                if (!Ext.Array.contains(fetch,mf.get('name'))) {
+                    columns.push(multi_column_cfg);
+                    fetch.push(mf.get('name'));
+                }
             });
         }
 
@@ -239,7 +242,6 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         var me = this;
         this.down('#column_selector_box').removeAll();
         var cb = this.down('#column_selector_box').add({
-            alwaysExpanded: false,
             xtype: 'rallyfieldpicker',
             id: 'big_grid_field_picker',
             autoExpand: false,
@@ -258,7 +260,6 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         
         this.down('#multichoice_column_selector_box').removeAll();
         var cb = this.down('#multichoice_column_selector_box').add({
-            alwaysExpanded: false,
             xtype: 'rallyfieldpicker',
             autoExpand: false,
             modelTypes: [me.type],
