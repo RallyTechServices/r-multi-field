@@ -241,7 +241,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     _addColumnChooser: function() {
         var me = this;
         this.down('#column_selector_box').removeAll();
-        var cb = this.down('#column_selector_box').add({
+        this.down('#column_selector_box').add({
             xtype: 'rallyfieldpicker',
             id: 'big_grid_field_picker',
             autoExpand: false,
@@ -257,8 +257,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     },
     _addMultiChoiceColumnChooser: function() {
         var me = this;
-        this.down('#multichoice_column_selector_box').removeAll();
-        var cb = this.down('#multichoice_column_selector_box').add({
+//        this.down('#multichoice_column_selector_box')removeAll();
+        this.down('#multichoice_column_selector_box').add({
             xtype: 'rallyfieldpicker',
             autoExpand: false,
             modelTypes: [me.type],
@@ -329,6 +329,5 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             return false;
         }
         return false;
-    }
-    
+   }
 });

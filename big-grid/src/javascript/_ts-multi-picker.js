@@ -184,7 +184,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
         return 'rally.techservices.fieldvalues.' + model_name + '.' + field_name;
     },
     _createStoreAndExpand: function() {
-        //console.log('_createStoreAndExpand');
         var me = this;
         Ext.define('Choice',{
             extend:'Ext.data.Model',
