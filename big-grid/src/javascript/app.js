@@ -13,7 +13,7 @@ Ext.define('CustomApp', {
         { xtype:'container', itemId:'grid_box',margin: 10 }
     ],
     config: {
-        defaultSettings: {
+     defaultSettings: {
             type: 'HierarchicalRequirement',
             fetch: "FormattedID,Name",
             pageSize: 20
@@ -23,15 +23,14 @@ Ext.define('CustomApp', {
 
     launch: function() {
         var me = this;
-        var type = this.getSetting('type')
-        this._getMultiFieldList(type).then({
+        this._getMultiFieldList(this.getSetting('type')).then({
             scope:this,
             success: function(){
-                if (this.isExternal){
+                this.logger.log('Success loading multi-field');
+                if (this.isExternal()){
                     this.showSettings(this.config);
                 } else {
-                    this._loadSettingsIntoConfig();
-                    this._makeAndDisplayGrid(type,config.pageSize,config.fetch,config.columns);
+                    this.onSettingsUpdate(this.getSettings());  //(this.config.type,this.config.pageSize,this.config.fetch,this.config.columns);
                 }        
                
             },
@@ -39,8 +38,59 @@ Ext.define('CustomApp', {
                 alert ('Error loading multi-select fields');
             }
         });
+     return;
+        
+        
+        this._loadPreferences().then({
+            scope:this,
+            success: function(){
+                this._getMultiFieldList(this.config.type).then({
+                    scope:this,
+                    success: function(){
+                        this.logger.log('Success loading multi-field');
+                        if (this.isExternal()){
+                            this.showSettings(this.config);
+                        } else {
+                            this._makeAndDisplayGrid(this.config.type,this.config.pageSize,this.config.fetch,this.config.columns);
+                        }        
+                       
+                    },
+                    failure: function(){
+                        alert ('Error loading multi-select fields');
+                    }
+                });
+            },
+            failure: function(){
+                alert('Error loading preferences');
+            }
+        });
      },
-    _getWorkspacePreferences: function(filter){
+     _loadPreferences: function(){
+         var deferred = Ext.create('Deft.Deferred')
+         this._getWorkspacePreferences('rally.technicalservices.bigmulti.settings').then({
+             scope:this,
+             success: function (prefs){
+                 this.logger.log("got prefs ", prefs, prefs==null,prefs.length);
+                 if ((prefs == {})) {
+                     this.config.type = 'HierarchicalRequirement';
+                     this.config.fetch = 'FormattedID,Name';
+                     this.config.pageSize = '25';
+                     this.config.query_string ='';
+                     this.config.columns = '[{dataIndex:"FormattedID",text:"Formatted ID"},{dataIndex: "Name",text:"Name"}]'
+                 } else {
+                     this.config = Ext.JSON.decode(prefs);
+                 }
+                 
+                 deferred.resolve();
+             },
+             failure: function (){
+                 this.logger.log('Failed to load preferences.');
+                 deferred.reject();
+             }
+         });
+         return deferred.promise;
+     },
+     _getWorkspacePreferences: function(filter){
         var deferred = Ext.create('Deft.Deferred');
         Rally.data.PreferenceManager.load({
           workspace: this.getContext().getWorkspace(), 
@@ -65,26 +115,29 @@ Ext.define('CustomApp', {
     _getMultiFieldList: function(model) {
         var deferred = Ext.create('Deft.Deferred');
         var me = this;
-        this.multi_field_list = [];
+        this.multi_field_list =[];
+        this.logger.log('_getMultiFieldList: Entering', model);
         key = 'rally.techservices.fieldvalues.';
         this._getWorkspacePreferences(key).then({
                 scope: this,
                 success: function(prefs) {
                     var keys = Ext.Object.getKeys(prefs);
-                     Ext.Array.each(keys, function(key){
+                     Ext.each(keys, function(key){
                         var name_array = key.split('.');
                         var field_name = name_array[name_array.length - 1];
                         var model_name = name_array[name_array.length - 2];
                         if (name_array[name_array.length-3].toLowerCase() == 'portfolioitem'){
                             model_name = 'PortfolioItem/' + model_name;
                         }
-                        if (model_name == model){
+                            if (this.multi_field_list[model_name] == undefined) {
+                                this.multi_field_list[model_name] = field_name
+                            } else {
+                                this.multi_field_list[model_name] = this.multi_field_list[model_name] + ',' + field_name
+                            }
                             me.logger.log('Multi-select list add: ' +  key);
-                            me.multi_field_list.push(field_name);
-                        }
-                     });
-                     me.multi_field_list = me.multi_field_list.join(',');
-
+                            me.logger.log(this.multi_field_list);
+                     },this);
+                     
                      deferred.resolve();
                 }
         });
@@ -93,12 +146,9 @@ Ext.define('CustomApp', {
 
     _makeAndDisplayGrid: function(type,pageSize,fetch, columns) {
         var me = this;
-       // var type = this.getConfig('type');
-        this.logger.log("_makeAndDisplayGrid",type,pageSize,fetch,this.config);
+        this.logger.log("_makeAndDisplayGrid",type,pageSize,fetch,columns);
         var context = this.getContext();
-//            pageSize = Number(this.getConfig('pageSize')),
-//            fetch = this.getConfig('fetch');
-
+        pageSize = Number(pageSize);
         //this._getColumns(fetch);
         if ( this.down('rallygrid') ) {  
             this.logger.log("_makeAndDisplayGrid: destroying previous grid");        	
@@ -166,8 +216,6 @@ Ext.define('CustomApp', {
                     beforestaterestore: function(toolbar, state)
                     {
                         
-//                        var localPageSize = Number(me.getConfig('pageSize'));
-//                        if (localPageSize != state.pageSize)
                         if (pageSize != state.pageSize)
                             {
                                 state.pageSizes = this.pageSizes;
@@ -186,28 +234,38 @@ Ext.define('CustomApp', {
       //reorder columns in updated order to preferences 
       this.logger.log('_onColumnMove');  
       var currentIdx =0, newIdx = 0;
+      var new_fetch = [];
       Ext.each(this.config.columns,function(cfgcol, idx, colary){
           if (cfgcol.dataIndex == column.dataIndex){
               currentIdx = idx;
               newIdx = currentIdx + (toIdx-fromIdx);
           }
+          new_fetch.push(cfgcol.dataIndex);
       });
+
       if (currentIdx != newIdx){
+          var movedFetch = new_fetch[currentIdx];
           var movedCol = this.config.columns[currentIdx];
           this.config.columns.splice(newIdx,0,movedCol);
+          new_fetch.splice(newIdx,0,movedFetch);
           if (newIdx < currentIdx){
               currentIdx = currentIdx + 1;
           }
           this.config.columns.splice(currentIdx,1);
-         // this.saveSetting('fetch',this.config.columns);
-          // this._saveConfig(this.config).then({
-
-           this._saveConfigToSettings().then({
-              scope: this,
-              success: function() {
-                  this.logger.log('Column reordering saved to: ', this.config.columns);
+          new_fetch.splice(currentIdx,1);
+          this.updateSettingsValues({
+              scope:this,
+              settings: {
+                  fetch: new_fetch,
+              },                    
+              success: function(){
+                  this.logger.log('Saved column order:', this.getSettings());
+              },
+              failure: function(){
+                  this.logger.log('Column order failed to Save:', this.config);
               }
           });
+
       }
     },
     //Determines the default page size options based on the default page size
@@ -237,81 +295,6 @@ Ext.define('CustomApp', {
     _getFetchOnlyFields:function(){
         return ['LatestDiscussionAgeInMinutes'];
     },
-
-//    _getColumns: function(fetch){
-//        var me = this;
-//        var columns = [];
-//
-////        if ( this.getSetting('columns') ) {
-////            console.log('using setting', this.getSettings('columns'));
-////            columns = this.getSetting('columns');
-////        } else if (fetch) {
-//          columns = Ext.Array.difference(fetch.split(','), this._getFetchOnlyFields());
-////        }
-//          
-//          
-//          
-//        var xformed_columns = [];
-//        Ext.each(columns, function(column){
-//            xformed_columns.push(this._setRenderer(column,me));
-//        },this);
-//        
-//        this.logger.log("Using column definitions",xformed_columns);
-//        return xformed_columns;
-//    },
-//    _setRenderer: function(column,scope){
-//        this.logger.log('_setRenderer', column, this.multi_field_list);
-//        var data_index = column.dataIndex;
-//        model = this.getSetting('type');
-//        if (this.multi_field_list.length > 0){
-//            var multi_array= this.multi_field_list.split(',');
-//            console.log(multi_array);
-//            if (Ext.Array.contains(multi_array,column)){
-//                console.log('multi-select', column);
-//                column = scope._getMultiSelectColumnConfig(model,column);
-//            }
-//        }
-//        
-//        if ( data_index == 'DerivedPredecessors' ) {
-//            column = { 
-//                text: 'Derived Predecessors',
-//                xtype: 'templatecolumn', 
-//                tpl: '--',
-//                width: 200
-//            };
-//            column.renderer = function(value,metaData,record,row,col,store,view) {
-//                var display_value = "";
-//                var object_id = record.get('ObjectID');
-//                var div_id = "DP"+ object_id;
-//                
-//                Ext.create('Rally.data.lookback.SnapshotStore',{
-//                    autoLoad: true,
-//                    fetch: ['Name','FormattedID'], //KC
-//                    filters: [
-//                        {property:'__At',value:'current'},
-//                        {property:'_ItemHierarchy',value:object_id},
-//                        {property:'Predecessors',operator:'!=',value:null}
-//                    ],
-//                    listeners: {
-//                        scope: scope,
-//                        load: function(store,records){
-//                            var count = records.length || 0;
-//                            var containers = Ext.query('#'+div_id);
-//           
-//                            if ( containers.length == 1 ){
-//                        		containers[0].innerHTML = this._getDerivedPredecessorsContent(records); //count;
-//                        		//Need to re-draw the grid here because the original content likely required less space than the new content so content may be cutoff
-//                        		this.down('rallygrid').doLayout();
-//                            }
-//                        }
-//                    }
-//                });
-//                return '<div id="' + div_id + '">loading</div>';
-//            }
-//        }  
-//        console.log('column: ', column);
-//        return column;
-//    },
     _getDerivedPredecessorColumnConfig: function(){
         if ( data_index == 'DerivedPredecessors' ) {
             column = { 
@@ -386,29 +369,30 @@ Ext.define('CustomApp', {
         }
         return plugins;
     },
-//    _saveConfig: function(config) {
-//        var me = this;
-//        this.logger.log("new config",config);
-//        delete config["config"];
-//        delete config["context"];
-//        delete config["settings"];
-//        
-//        me.logger.log('pageSize',config.pageSize);
-//        var deferred = Ext.create('Deft.Deferred');
-//        Rally.data.PreferenceManager.update({
-//            appID: this.getAppId(),
-//            filterByUser: true,
-//            settings: { 
-//                'rally.technicalservices.bigmulti.settings': Ext.JSON.encode(config)
-//            },
-//            success: function() {
-//                me.logger.log("Saved settings",config);
-//                deferred.resolve();
-//            }
-//        });
-//        return deferred.promise;
-//    },
-//    
+    _savePreferences: function(config) {
+        var me = this;
+        this.logger.log("new config",config);
+        delete config["config"];
+        delete config["context"];
+        delete config["settings"];
+        
+        me.logger.log('pageSize',config.pageSize);
+        var deferred = Ext.create('Deft.Deferred');
+        Rally.data.PreferenceManager.update({
+            appID: this.getAppId(),
+            workspace: this.getContext().getWorkspace(),
+            filterByUser: false,
+            settings: { 
+                'rally.technicalservices.bigmulti.settings': Ext.JSON.encode(config)
+            },
+            success: function() {
+                me.logger.log("Saved settings",config);
+                deferred.resolve();
+            }
+        });
+        return deferred.promise;
+    },
+    
     // getConfig - we need this function to store the config locally so that we 
     //can run this in debug mode -- 
     getConfig: function(field){
@@ -458,27 +442,46 @@ Ext.define('CustomApp', {
         }
         return false;
    },
-   _getColumnsFromFields: function(type,selected_fields_from_picker){
+   _getColumnsFromFields: function(type,selected_fields_from_picker,fetch){
        
        var columns = [];
-
+       
        Ext.each(selected_fields_from_picker, function(field){
            var name = field['name'];
            var display_name = field['displayName'];
-           var column_def = {
-                   dataIndex: name,
-                   text: display_name
-              };
-           if (Ext.Array.contains(this.multi_field_list,name)){
+           var column_def = '';
+
+           if (this.multi_field_list[type] && (Ext.Array.contains(this.multi_field_list[type],name))){
                column_def = this._getMultiSelectColumnConfig(type,name,display_name);
            } else if (name == 'DerivedPredecessors'){
-               column_def = this._getDerivedPredecessorsColumnConfig();
+               column_def = this._getDerivedPredecessorColumnConfig();
+           } else {
+               column_def = {dataIndex: name, text: display_name};
            }
            
            columns.push(column_def);
        }, this);
        
-       return columns;
+       
+       this.logger.log('Got Columns:', columns);
+
+       //now reorder the array....
+       var ordered_columns = [];
+       var fetch_array = [];
+       if (!Array.isArray(fetch)) {
+           fetch_array = fetch.split(',');
+       } else {
+           fetch_array = fetch; 
+       }
+       Ext.Array.each(fetch_array, function(fetch){
+           Ext.each(columns, function(column){
+               if (column.dataIndex == fetch){
+                   ordered_columns.push(column);
+               }
+           },this);
+       });
+       this.logger.log('Returning ordered columns: ', ordered_columns);
+      return ordered_columns;
    },
 
    /********************************************
@@ -579,6 +582,11 @@ Ext.define('CustomApp', {
         }
         return this._appSettings;
     },
+    _onSettingsSaved: function(settings){
+        Ext.apply(this.settings, settings);
+        this._hideSettings();
+        this.onSettingsUpdate(settings);
+    },
     //onSettingsUpdate:  Override
     onSettingsUpdate: function (settings){
         //Build and save column settings...this means that we need to get the display names and multi-list
@@ -586,65 +594,47 @@ Ext.define('CustomApp', {
         
         var type = this.getSetting('type');
         var pageSize = Number(this.getSetting('pageSize'));
-        var fetch = this.getSetting('fetch').join(',');
+        var fetch = this.getSetting('fetch');
         var query_string = this.getSetting('query_string');
         
         this._getFieldsFromFetch(type,fetch).then({
             scope: this,
             success: function(fields){
-                columns = this._getColumnsFromFields(type,fields);
-                this._loadSettingsIntoConfig(); 
+                columns = this._getColumnsFromFields(type,fields,fetch);
+                
                 this.config.columns = columns; 
-                this._saveConfigToSettings().then({
+                this.config.fetch = fetch; //this.getSetting('fetch').join(',');
+                this.config.type = type; //this.getSetting('type');
+                this.config.pageSize = pageSize ; //Number(this.getSetting('pageSize'));
+                this.config.query_string =  query_string; //this.getSetting('query_string');
+             //   this._makeAndDisplayGrid(type,pageSize,fetch,columns);
+                
+                this._savePreferences(this.config).then({
                     scope:this,
                     success: function(){
-                        this._makeAndDisplayGrid(type,pageSize,fetch, columns);
+                        this.logger.log('_onSettingsUpdate > _savePreferences Successful', this.config);
+                        this._makeAndDisplayGrid(type,pageSize,fetch,columns);
                     },
                     failure: function(){
-                        alert('Error saving Settings');
+                        this.logger.log('_onSettingsUpdate > _savePreferences Failed', this.config);
+                        alert('Error saving Preferences!');
                     }
-                
                 });
              },
             failure: function(){
-                alert('Error loading fields from grid.');
+                alert('Error loading fields from grid!');
             }
         });
-    },
-    _loadSettingsIntoConfig: function(){
-        
-        this.config.fetch = this.getSetting('fetch').join(',');
-        this.config.type = this.getSetting('type');
-        this.config.pageSize = Number(this.getSetting('pageSize'));
-        this.config.query_string =  this.getSetting('query_string');
-        this.config.columns = Ext.JSON.decode(this.getSetting('columns'));
-        console.log('columns decode',this.config.columns);
-    },
-    _saveConfigToSettings: function(){
-        var deferred = Ext.create('Deft.Deferred');
-        
-        this.updateSettingsValues({
-            scope:this,
-            settings: {
-                fetch: this.config.fetch,
-                type: this.config.type,
-                pageSize: this.config.pageSize,
-                query_string:this.config.query_string,
-                columns: Ext.JSON.encode(this.config.columns)
-            },                    
-            success: function(){
-                deferred.resolve();
-            },
-            failure: function(){
-                deferred.reject();
-            }
-        });
-        return deferred.promise; 
     },
     _getFieldsFromFetch: function(type,fetch){
         var deferred = Ext.create('Deft.Deferred');
-
-        fetch_array = Ext.Array.difference(fetch.split(','), this._getFetchOnlyFields());
+        if (!Array.isArray(fetch)) {
+            fetch_array = fetch.split(',');
+        } else {
+            fetch_array = fetch; 
+        }
+            
+        fetch_array = Ext.Array.difference(fetch_array, this._getFetchOnlyFields());
         Rally.data.ModelFactory.getModel({
             type: type,
             scope: this,
@@ -653,7 +643,7 @@ Ext.define('CustomApp', {
                 fields = model.getFields();
                 Ext.Array.each(fields,function(field){
                     if (Ext.Array.contains(fetch_array,field.name)){
-                        ret_fields.push(field);
+                            ret_fields.push(field);
                     }
                 },this);
                 deferred.resolve(ret_fields);
