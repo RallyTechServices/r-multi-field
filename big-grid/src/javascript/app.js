@@ -158,18 +158,22 @@ Ext.define('CustomApp', {
         var pageSizeOptions = this._setPageSizeOptions(pageSize);
         this.logger.log("pageSizes", pageSizeOptions);
         
+        var type_label = 'New ' + type + ':';
+        if (type.toLowerCase() == 'hierarchicalrequirement'){
+            type_label = 'New User Story:';
+        }
+        
         this.down('#grid_box').add({
             xtype: 'rallyaddnew',
             recordTypes: [type],
             scope:this,
             ignoredRequiredFields: ['Name','Project','ScheduleState'],
-            margins: 100,
+            margin: 20,
+            fieldLabel: type_label,
             listeners: {
                 scope: this,
                 create: function(addNew,record){
-                    var message = "Created " + record.get('Name');
-                    this.logger.log(message);
-                    //Rally.ui.notify.Notifier.show({ message: message + '.' });
+                    this.logger.log('New Artifact Added:',record);
                 }
             }
           
