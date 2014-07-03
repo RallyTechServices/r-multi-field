@@ -143,7 +143,6 @@ Ext.define('CustomApp', {
         });
         return deferred.promise;
     },
-
     _makeAndDisplayGrid: function(type,pageSize,fetch, columns) {
         var me = this;
         this.logger.log("_makeAndDisplayGrid",type,pageSize,fetch,columns);
@@ -153,10 +152,28 @@ Ext.define('CustomApp', {
         if ( this.down('rallygrid') ) {  
             this.logger.log("_makeAndDisplayGrid: destroying previous grid");        	
             this.down('rallygrid').destroy();
+            this.down('rallyaddnew').destroy();
         }
 
         var pageSizeOptions = this._setPageSizeOptions(pageSize);
         this.logger.log("pageSizes", pageSizeOptions);
+        
+        this.down('#grid_box').add({
+            xtype: 'rallyaddnew',
+            recordTypes: [type],
+            scope:this,
+            ignoredRequiredFields: ['Name','Project','ScheduleState'],
+            margins: 100,
+            listeners: {
+                scope: this,
+                create: function(addNew,record){
+                    var message = "Created " + record.get('Name');
+                    this.logger.log(message);
+                    //Rally.ui.notify.Notifier.show({ message: message + '.' });
+                }
+            }
+          
+        });
         
         this.down('#grid_box').add({
             xtype: 'rallygrid',
