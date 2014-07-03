@@ -32,68 +32,81 @@ Ext.define('Rally.techservices.TSMultiPicker', {
          * @type {String}
          * The separator for joining the array of choices
          */
-
-        separator: ',',
-        model: null
+        separator: ','
         
         
     },
 
     constructor: function(config) {
-        console.log('tsmultipicker constructor');
         this.mergeConfig(config);
         this.callParent([this.config]);
     },
 
     initEvents: function() {
-        console.log('initEvents');
+        //console.log('initEvents',arguments);
         this.callParent(arguments);
+        
+        
+        this.on('afteralignpicker', this._selectCheckboxes, this);
+        if (this.collapseOnBlur) {
+            this.on('blur', this.collapse, this);
+        }
+        this.mon(this.inputEl, 'keyup', this.validate, this);
+
+        if (this.alwaysExpanded || this.autoExpand) {
+            if (this.rendered) {
+                this.expand();
+            } else {
+                this.on('afterrender', this.expand, this);
+            }
+        }
+
 
     },
 
     setValue: function(values) {
-        console.log('setValue',values);
 
-        this.selectedValues.clear();
-
+        this.selectedValues.clear(); 
         if(Ext.isArray(values)) {
             Ext.each(values, function(value) {
                 this.selectedValues.add(value.get(this.selectionKey), value);
             }, this);
         } else {
             var items = Ext.Array.merge((values || '').split(','), this.alwaysSelectedValues);
-            Ext.each(items, function(key) {
-                var value = this.store && this.store.findRecord(this.selectionKey, new RegExp('^' + key + '$'));
+            Ext.Array.each(items, function(key) {
+                var regex = new RegExp('^' + key.replace(/([\.\\\+\*\?\[\^\]\$\(\)])/g, '\\$1') + '$');
+                var value = this.store && this.store.findRecord(this.selectionKey, regex);
                 if(value) {
                     this.selectedValues.add(key, value);
                 }
             }, this);
         }
 
+        if (this.store){
+            this.groupRecords(this._getRecordValue());
+        }
         if(this.isExpanded) {
             this._onListRefresh();
             this.groupRecords(this.getValue());
         }
-        console.log(this.getValue());
     },
 
     // convert the records into a separated string
     getValue: function() {
-        console.log('getValue');
         var records = this._getRecordValue();
         var value = [];
         
-        console.log(records);
         Ext.Array.each(records,function(record){
             if (record) {
-                value.push(record.get(this.recordKey));
+          //      value.push(record.get(this.recordKey));ex
+                value.push(record.get(this.selectionKey));
             }
         },this);
         return value.join(this.separator) ;
     },
 
     getSubmitData: function() {
-        console.log('getSubmitData');
+
         var fieldNames = [];
         this.selectedValues.eachKey(function(key, value) {
             if(value.get('name')) {
@@ -111,7 +124,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * @private
      */
     createPicker: function() {
-        console.log('createPicker');
+        //console.log('createPicker');
         this.picker = Ext.create(this.pickerType, this.pickerCfg);
         this.picker.add(this._createList());
         return this.picker;
@@ -121,7 +134,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * @private
      */
     alignPicker: function() {
-        console.log('alignPicker');
+        //console.log('alignPicker');
         var heightAbove = this.getPosition()[1] - Ext.getBody().getScroll().top,
             heightBelow = Ext.Element.getViewHeight() - heightAbove - this.getHeight(),
             space = Math.max(heightAbove, heightBelow);
@@ -143,7 +156,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     expand: function() {
-        console.log('expand');
+        //console.log('expand');
         this.setPlaceholderText(this.loadingText);
         if (this.store) {
             Rally.ui.picker.MultiObjectPicker.superclass.expand.call(this);
@@ -160,7 +173,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     onRender: function() {
-        console.log('onRender');
+        //console.log('onRender');
         this.callParent(arguments);
         if (!this.hideTrigger) {
             this.inputEl.addCls('rui-multi-object-picker-no-trigger');
@@ -171,7 +184,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
         return 'rally.techservices.fieldvalues.' + model_name + '.' + field_name;
     },
     _createStoreAndExpand: function() {
-        console.log('_createStoreAndExpand');
         var me = this;
         Ext.define('Choice',{
             extend:'Ext.data.Model',
@@ -195,7 +207,8 @@ Ext.define('Rally.techservices.TSMultiPicker', {
                 var values = [];
                 if ( prefs && prefs[key] ) {
                     Ext.Array.each(Ext.JSON.decode(prefs[key]),function(value){
-                        values.push({Name:value,Value:value});
+                        var key_value = value.replace(/\W+/g,"");
+                        values.push({Name:value,Value:key_value});
                     });
                     store.loadData(values);
                 }
@@ -225,9 +238,11 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     _getRecordValue: function() {
         var me = this;
         var recordArray = [];
-
+        //console.log('_getRecordValue',this.selectedValues);
         this.selectedValues.eachKey(function(key, value) {
-            var record = this.store.findRecord(this.selectionKey, new RegExp('^' + value.get(this.selectionKey) + '$'));
+              var regex = new RegExp('^' + key.replace(/([\.\\\+\*\?\[\^\]\$\(\)])/g, '\\$1') + '$');
+//              var record = this.store.findRecord(this.recordKey, new RegExp('^' + value.get(this.recordKey) + '$'));
+                var record = this.store.findRecord(this.selectionKey, regex);
             recordArray.push(record);
         }, this);
         return recordArray;
@@ -237,19 +252,18 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * Create the BoundList based on #listCfg and setup listeners to some of its events.
      */
     _createList: function() {
+
         var listCfg = {
             store: this.store,
             tpl: this._getListTpl()
         };
         Ext.apply(listCfg, this.listCfg);
         this.list = Ext.create(this.listType, listCfg);
-
         this.mon(this.list, {
             refresh: this._onListRefresh,
             itemclick: this._onListItemClick,
             scope: this
         });
-
         return this.list;
     },
 
@@ -257,10 +271,10 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * Select the checkboxes for the selected records
      */
     _selectCheckboxes: function() {
-
         if (this.list && this.list.getSelectionModel()) {
             Ext.each(this.list.getSelectionModel().getSelection(), function(record) {
-                this._selectRowCheckbox(record.get(this.recordKey));
+
+                this._selectRowCheckbox(record.get(this.recordKey));  //
             }, this);
         }
     },
@@ -325,12 +339,11 @@ Ext.define('Rally.techservices.TSMultiPicker', {
             selectionModel.select(selectedInList);
         }
     },
-
     /**
      * @param recordId the value of the record's ID, which corresponds to the row
      */
     _getOptionCheckbox: function(recordId) {
-        //console.log('_getOptionCheckbox',recordId);
+//        console.log('_getOptionCheckbox',recordId);
         var checkboxSelector = 'li.' + this.id + '.' + this._getOptionClass(recordId) + ' .rui-picker-checkbox';
         return Ext.get(Ext.DomQuery.selectNode(checkboxSelector));
     },
@@ -339,12 +352,11 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * @param recordId the value of the record's ID, which corresponds to the row
      */
     _getOptionClass: function(recordId) {
-        //console.log('_getOptionClass',recordId);
         return 'rui-multi-object-picker-option-id-' + recordId.toString();
     },
 
     _selectRowCheckbox: function(recordId) {
-        //console.log('_selectRowCheckbox',recordId);
+//        console.log('_selectRowCheckbox',recordId);
         var checkbox = this._getOptionCheckbox(recordId);
         if (checkbox) {
             checkbox.addCls('rui-picker-cb-checked');
@@ -352,17 +364,17 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     _deselectRowCheckbox: function(recordId) {
-        //console.log('_deselectRowCheckbox',recordId);
+//        console.log('_deselectRowCheckbox',recordId);
         this._getOptionCheckbox(recordId).removeCls('rui-picker-cb-checked');
     },
 
     _isRecordInList: function(record) {
-        //console.log('_isRecordInList');
+//        console.log('_isRecordInList',record.recordKey, this.list.getNode(record));
         return this.list.getNode(record) ? true : false;
     },
 
     _autoExpand: function() {
-        //console.log('_autoExpand');
+//        console.log('_autoExpand');
         if (this.autoExpand && (!this.isExpanded)) {
             this.onTriggerClick();
         }
@@ -373,7 +385,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * @return {Ext.XTemplate} the XTemplate for the list.
      */
     _getListTpl: function() {
-        console.log('_getListTpl');
+//        console.log('_getListTpl',this.rowCls,this.disabledRowCls,this.id,this.recordKey,this.rowCheckboxCls,this.rowTextCls);
         var me = this;
         return Ext.create('Ext.XTemplate',
             '<tpl exec="this.headerRendered = false"></tpl>',
@@ -415,7 +427,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     _onSelect: function(record, event) {
-        console.log('_onSelect');
+//        console.log('_onSelect');
         var key = record.get(this.selectionKey);
         this.selectedValues.add(key, record);
         this._syncSelection();
@@ -426,7 +438,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     _onDeselect: function(record, event) {
-        console.log('_onDeselect');
+//        console.log('_onDeselect');
         var key = record.get(this.selectionKey);
         this.selectedValues.remove(this.selectedValues.get(key));
         this._syncSelection();
@@ -437,7 +449,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     _clickedRowCheckbox: function(event) {
-        console.log('_clickedRowCheckbox');
+//        console.log('_clickedRowCheckbox');
         //selected the whole row and rowSelectable == true
         if (this.getRowSelectable() &&
             (Ext.get(event.getTarget()).hasCls(this.rowCls) ||
@@ -450,7 +462,6 @@ Ext.define('Rally.techservices.TSMultiPicker', {
         if (Ext.get(event.getTarget()).hasCls(this.rowCheckboxCls)) {
             return true;
         }
-
         return false;
     },
 
@@ -459,7 +470,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
      * @private
      */
     _onListItemClick: function(view, record, itemEl, index, event) {
-        console.log('_onListItemClick');
+//        console.log('_onListItemClick');
         if(Ext.Array.contains(this.alwaysSelectedValues, record.get(this.selectionKey))) {
             return false;
         }
@@ -474,24 +485,29 @@ Ext.define('Rally.techservices.TSMultiPicker', {
     },
 
     _onStoreLoad: function() {
-        console.log('_onStoreLoad');
+        //console.log('_onStoreLoad');
         this.removePlaceholderText();
         this.initFiltering();
         this.groupRecords(this._getRecordValue());
+
+        if (this.originalValue) {
+            this.setValue(this.originalValue);
+        }
 
         if (this.list) {
             this.list.refresh();
         }
     },
+    
 
     _onListRefresh: function() {
-        console.log('_onListRefresh');
+//        console.log('_onListRefresh');
         this._syncSelection();
         this.alignPicker();
     },
 
     _groupRecordsAndScroll: function(selectedRecords) {
-        console.log('_groupRecordsAndScroll',selectedRecords);
+//        console.log('_groupRecordsAndScroll',selectedRecords);
         var scroll = 0;
         if(this.maintainScrollPosition) {
             scroll = this.list.listEl.getScroll();
@@ -506,14 +522,15 @@ Ext.define('Rally.techservices.TSMultiPicker', {
         }
     },
     groupRecords: function(selectedRecords) {
-        console.log('groupRecords',selectedRecords);
-        
-        
+
+        if (typeof(selectedRecords) == "string"){
+            return;
+        }        
         var selectedText = this.selectedTextLabel,
             availableText = this.availableTextLabel,
             attr = this.groupName,
             store = this.store;
-
+        
         // Mark selected items with attribute, then group by attribute.
         store.suspendEvents(true);
         store.each(function(record) {
@@ -521,7 +538,7 @@ Ext.define('Rally.techservices.TSMultiPicker', {
         });
 
         Ext.each(selectedRecords, function(record) {
-            record.set(attr, selectedText);
+                record.set(attr, selectedText);
         });
 
         store.group([{
