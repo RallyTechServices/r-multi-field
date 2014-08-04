@@ -150,7 +150,7 @@ Ext.define('CustomApp', {
         pageSize = Number(pageSize);
         //this._getColumns(fetch);
         if ( this.down('rallygrid') ) {  
-            this.logger.log("_makeAndDisplayGrid: destroying previous grid");        	
+            this.logger.log("_makeAndDisplayGrid: destroying previous grid");           
             this.down('rallygrid').destroy();
             this.down('rallyaddnew').destroy();
         }
@@ -205,7 +205,7 @@ Ext.define('CustomApp', {
             },
             pagingToolbarCfg: {
                 scope: me,
-            	stateful: true,
+                stateful: true,
                 stateId: 'rally-techservices-biggrid-toolbar',
                 stateEvents: ['change'],
                 pageSizes: pageSizeOptions,
@@ -292,8 +292,8 @@ Ext.define('CustomApp', {
     //Determines the default page size options based on the default page size
     _setPageSizeOptions: function (defaultPageSize)
     {
-    	var pageSizes = [defaultPageSize,defaultPageSize*2,defaultPageSize*4,defaultPageSize*8,defaultPageSize*20];
-    	return pageSizes;
+        var pageSizes = [defaultPageSize,defaultPageSize*2,defaultPageSize*4,defaultPageSize*8,defaultPageSize*20];
+        return pageSizes;
     },
     
     

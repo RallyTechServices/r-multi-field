@@ -118,10 +118,20 @@ Ext.define('CustomApp', {
         store.filter([{
             filterFn:function(field){ 
                 var valid = false;
-                if ( field.get('name') == "Description" || field.get('name') == "Notes" ) {
+                if ( field.get('name') == "Description" || 
+                        field.get('name') == "Notes" || 
+                        field.get('name') == "Name") {
                     return false;
                 }
-                if ( field.get('fieldDefinition').attributeDefinition.AttributeType == "TEXT" ) {
+                var field_def= field.get('fieldDefinition');
+                if (field_def.attributeDefinition.Constrained == true){
+                    return false;
+                }
+                if (field_def.attributeDefinition.ReadOnly == true){
+                    return false;
+                }
+                if ( field.get('fieldDefinition').attributeDefinition.AttributeType == "STRING" || 
+                        field.get('fieldDefinition').attributeDefinition.AttributeType == "TEXT") {
                     valid = true;
                 }
                 return valid;
@@ -136,6 +146,7 @@ Ext.define('CustomApp', {
         
         var type_name = this.down('#type_selector').getValue();
         var field_name = this.down('#field_selector').getValue();
+        
         var key = this._getKeyName(type_name, field_name);
         
         Rally.data.PreferenceManager.load({
@@ -158,6 +169,8 @@ Ext.define('CustomApp', {
         //return 'rally.techservices.fieldvalues.' + field_name;
     },
     _validateAndSave: function() {
+        this.logger.log("_validateAndSave",field_name,unique_array);
+
         var me = this;
         var value_field = this.down('#field_values');
         var raw_value = value_field.getValue();
@@ -166,8 +179,11 @@ Ext.define('CustomApp', {
         var unique_array = Ext.Array.unique(values);
         var type_name = this.down('#type_selector').getValue();
         var field_name = this.down('#field_selector').getValue();
+        var field_record = this.down('#field_selector').getRecord();
         
-        this.logger.log("_validateAndSave",field_name,unique_array);
+        //validate that if the field is a string field, that the contents of the box together does not exceed the string length
+        //Since we are just showing a warning, we aren't capturing the return value.  
+        this._validateField(field_record, raw_value);
         
         var key = this._getKeyName(type_name, field_name);
         this.logger.log('_validateAndSave key=' + key);
@@ -181,5 +197,17 @@ Ext.define('CustomApp', {
                 me.publish('choiceDefinerMessage', 'Choices saved');
             }
         });
+    },
+    _validateField: function(field, values){
+
+        this.logger.log('_validateField');
+        var attr_def = field.get('fieldDefinition').attributeDefinition;
+        this.logger.log('MaxLength=' + attr_def.MaxLength + ' Length Required:' + values.length);
+        if (values.length > attr_def.MaxLength){
+            var str = "The length of all valid values (" + attr_def.MaxLength + ") exceeds the max length of the field (" + values.length + ").\nIt is possible that the field values will not be saved properly if the selected options exceed the max length of the field.";
+           alert (str);
+            return false;
+        }
+        return true;
     }
 });
