@@ -23,13 +23,10 @@ Ext.define('CustomApp', {
 
     launch: function() {
         var me = this;
-        console.log(this.getSetting('Name_width'), this.getSetting('FormattedID_width'));
         this._getMultiFieldList(this.getSetting('type')).then({
             scope:this,
             success: function(){
                 this.logger.log('Success loading multi-field');
-                console.log(this.getSetting('Name_width'), this.getSetting('FormattedID_width'));
-
                 if (this.isExternal()){
                     this.showSettings(this.config);
                 } else {
@@ -153,7 +150,7 @@ Ext.define('CustomApp', {
         pageSize = Number(pageSize);
         //this._getColumns(fetch);
         if ( this.down('rallygrid') ) {  
-            this.logger.log("_makeAndDisplayGrid: destroying previous grid");        	
+            this.logger.log("_makeAndDisplayGrid: destroying previous grid");           
             this.down('rallygrid').destroy();
             this.down('rallyaddnew').destroy();
         }
@@ -193,8 +190,7 @@ Ext.define('CustomApp', {
             plugins: this._getPlugins(columns),
             listeners: {
                 scope:this,
-                columnmove: this._onColumnMove,
-                columnresize: this._onColumnResize
+                columnmove: this._onColumnMove
             },
             storeConfig: {
                 fetch: fetch,
@@ -209,7 +205,7 @@ Ext.define('CustomApp', {
             },
             pagingToolbarCfg: {
                 scope: me,
-            	stateful: true,
+                stateful: true,
                 stateId: 'rally-techservices-biggrid-toolbar',
                 stateEvents: ['change'],
                 pageSizes: pageSizeOptions,
@@ -255,22 +251,6 @@ Ext.define('CustomApp', {
             }
         });
     },
-    _onColumnResize: function(ct,column,width){
-        this.logger.log('_onColumnResize',column,width);
-        var settings_to_update = {}; 
-        var col_width_key = column.dataIndex + '_width';
-        settings_to_update[col_width_key] = width;  
-        this.updateSettingsValues({
-            scope:this,
-            settings: settings_to_update,                    
-            success: function(){
-                this.logger.log('Saved column width:', this.getSettings());
-            },
-            failure: function(){
-                this.logger.log('Column width failed to Save:', this.config);
-            }
-        });
-    },
     _onColumnMove: function(ct,column,fromIdx,toIdx){
       //reorder columns in updated order to preferences 
       this.logger.log('_onColumnMove');  
@@ -312,8 +292,8 @@ Ext.define('CustomApp', {
     //Determines the default page size options based on the default page size
     _setPageSizeOptions: function (defaultPageSize)
     {
-    	var pageSizes = [defaultPageSize,defaultPageSize*2,defaultPageSize*4,defaultPageSize*8,defaultPageSize*20];
-    	return pageSizes;
+        var pageSizes = [defaultPageSize,defaultPageSize*2,defaultPageSize*4,defaultPageSize*8,defaultPageSize*20];
+        return pageSizes;
     },
     
     
@@ -337,13 +317,12 @@ Ext.define('CustomApp', {
         return ['LatestDiscussionAgeInMinutes'];
     },
     _getDerivedPredecessorColumnConfig: function(){
-        this.logger.log('_getDerivedPredecessorColumnConfig');
         if ( data_index == 'DerivedPredecessors' ) {
             column = { 
                 text: 'Derived Predecessors',
                 xtype: 'templatecolumn', 
                 tpl: '--',
-                width: this.getSetting(data_index + '_width') || 200
+                width: 200
             };
             column.renderer = function(value,metaData,record,row,col,store,view) {
                 var display_value = "";
@@ -361,7 +340,6 @@ Ext.define('CustomApp', {
                     listeners: {
                         scope: scope,
                         load: function(store,records){
-                            this.logger.log('lookbackstore load event');
                             var count = records.length || 0;
                             var containers = Ext.query('#'+div_id);
            
@@ -379,11 +357,9 @@ Ext.define('CustomApp', {
        return column;
     },
     _getMultiSelectColumnConfig: function(type_name, data_index, display_name){
-        this.logger.log('_getMultiSelectColumnConfig');
         var multi_column_cfg = {
             dataIndex:data_index,
             text: display_name,
-            width: this.getSetting(data_index + '_width') || 100,
             editor: {
                 xtype:'tsmultipicker',
                 autoExpand: false,
@@ -396,7 +372,6 @@ Ext.define('CustomApp', {
     //Update what is populated in the custom Grid
     _getDerivedPredecessorsContent: function(records)
     {
-        this.logger.log('_getDerivedPredecessorsContent');
         var story_names = '';
         if (records.length > 0){
             for (var i=0;i < records.length; i++){
@@ -502,9 +477,7 @@ Ext.define('CustomApp', {
            } else if (name == 'DerivedPredecessors'){
                column_def = this._getDerivedPredecessorColumnConfig();
            } else {
-               var width_key = name + '_width';
-               //var width = 55;  //this.getSetting(width_key) || 100; 
-                   column_def = {dataIndex: name, text: display_name, width: 55, flex:0};
+               column_def = {dataIndex: name, text: display_name};
            }
            
            columns.push(column_def);

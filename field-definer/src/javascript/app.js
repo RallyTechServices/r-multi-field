@@ -161,8 +161,6 @@ Ext.define('CustomApp', {
                 }
             }
         });
-        
-        
     },
     _getKeyName: function(type_name,field_name){
         //May need to update typename to remove /
