@@ -193,7 +193,9 @@ Ext.define('CustomApp', {
         Rally.data.PreferenceManager.update({
             workspace: this.getContext().getWorkspace(),
             settings: settings,
-            success: function(){
+            scope:this,
+            success: function(updatedRecords,notUpdatedRecord,options){
+                me.logger.log('success',updatedRecords,notUpdatedRecord,options);
                 me.publish('choiceDefinerMessage', 'Choices saved');
             }
         });
