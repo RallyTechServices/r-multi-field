@@ -193,10 +193,54 @@ Ext.define('CustomApp', {
         Rally.data.PreferenceManager.update({
             workspace: this.getContext().getWorkspace(),
             settings: settings,
-            success: function(){
-                me.publish('choiceDefinerMessage', 'Choices saved');
+            scope:this,
+            success: function(updatedRecords,notUpdatedRecord,options){
+                me.logger.log('success',me.getContext().getWorkspace(), updatedRecords,notUpdatedRecord,options);
+                if (notUpdatedRecord.length > 0){
+                    //We need to intervene and save directly 
+                    me.logger.log('PreferenceManager update did not work;  Saving preferences directly.');
+                    me._savePrefs(key, settings[key]).then({
+                        failure: function(){
+                            Rally.ui.notify.Notifier.showWarning({ message: 'Options not saved to Preferences.' });
+                        }
+                    });
+                } else {
+                    Rally.ui.notify.Notifier.show({ message: 'Options Saved to Preferences.' });
+                }
+                
+                
             }
         });
+    },
+    _savePrefs: function(key,value){
+        var deferred = Ext.create('Deft.Deferred');
+        
+        Ext.create('Rally.data.WsapiDataStore', {
+            model: 'Preference',
+            //context: {workspace: this.getContext().getWorkspace()},
+            fetch: ['ObjectID','Name','Value','CreationDate'],
+            sorters: [ { property: 'Name', direction: 'ASC' }],
+            autoLoad: true,
+            scope: this,
+            filters: [ { property: 'Name', operator: '=', value: key }],
+            listeners: {
+                load: function(store,data,success) {
+                    if (success && data && data.length == 1){
+                        console.log('success',data);
+                        data[0].set('Value',value);
+                        data[0].save();
+                        deferred.resolve();   
+                    } else {
+                        deferred.reject();  
+                    }
+                },
+                update: function(store,record,operation,modifiedFieldNames){
+                    Rally.ui.notify.Notifier.show({ message: 'Options Saved to Preferences.' });
+
+                }
+            }
+        });
+        return deferred;
     },
     _validateField: function(field, values){
 
