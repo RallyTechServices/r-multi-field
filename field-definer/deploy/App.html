@@ -3,11 +3,11 @@
 <head>
     <title>Field Content Definer</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Sat Aug 09 2014 12:43:59 GMT-0600 (MDT) -->
+    <!--  Build Date: Mon Aug 11 2014 14:09:59 GMT-0600 (MDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Sat Aug 09 2014 12:43:59 GMT-0600 (MDT)";
-        var CHECKSUM = "d267b5f58cd61f81d20db2b5aba133cd";
+        var APP_BUILD_DATE = "Mon Aug 11 2014 14:09:59 GMT-0600 (MDT)";
+        var CHECKSUM = "5671565eafdc14334b40d609f575e789";
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -313,10 +313,52 @@ Ext.define('CustomApp', {
             settings: settings,
             scope:this,
             success: function(updatedRecords,notUpdatedRecord,options){
-                me.logger.log('success',updatedRecords,notUpdatedRecord,options);
-                me.publish('choiceDefinerMessage', 'Choices saved');
+                me.logger.log('success',me.getContext().getWorkspace(), updatedRecords,notUpdatedRecord,options);
+                if (notUpdatedRecord.length > 0){
+                    //We need to intervene and save directly 
+                    me.logger.log('PreferenceManager update did not work;  Saving preferences directly.');
+                    me._savePrefs(key, settings[key]).then({
+                        failure: function(){
+                            Rally.ui.notify.Notifier.showWarning({ message: 'Options not saved to Preferences.' });
+                        }
+                    });
+                } else {
+                    Rally.ui.notify.Notifier.show({ message: 'Options Saved to Preferences.' });
+                }
+                
+                
             }
         });
+    },
+    _savePrefs: function(key,value){
+        var deferred = Ext.create('Deft.Deferred');
+        
+        Ext.create('Rally.data.WsapiDataStore', {
+            model: 'Preference',
+            //context: {workspace: this.getContext().getWorkspace()},
+            fetch: ['ObjectID','Name','Value','CreationDate'],
+            sorters: [ { property: 'Name', direction: 'ASC' }],
+            autoLoad: true,
+            scope: this,
+            filters: [ { property: 'Name', operator: '=', value: key }],
+            listeners: {
+                load: function(store,data,success) {
+                    if (success && data && data.length == 1){
+                        console.log('success',data);
+                        data[0].set('Value',value);
+                        data[0].save();
+                        deferred.resolve();   
+                    } else {
+                        deferred.reject();  
+                    }
+                },
+                update: function(store,record,operation,modifiedFieldNames){
+                    Rally.ui.notify.Notifier.show({ message: 'Options Saved to Preferences.' });
+
+                }
+            }
+        });
+        return deferred;
     },
     _validateField: function(field, values){
 
